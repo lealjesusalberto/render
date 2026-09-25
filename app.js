@@ -64,7 +64,6 @@
   const recognizer = new window.GestureRecognizer();
   let harpEngine = null;
   let gridEngine = null;
-  let airCanvas = new window.AirCanvasManager();
   let wireframe3d = null;
 
   // Resize canvas to match window
@@ -217,85 +216,6 @@
       }
     }
     ctx.restore();
-  }
-
-  // Mode 2: Air Canvas (Draw with pointing finger, grab/drag with pinch)
-  function renderAirCanvasMode() {
-    // 1. Draw all accumulated strokes first
-    airCanvas.draw(ctx);
-
-    for (const hand of handsData) {
-      const idxTip = hand.screenTips.index;
-      
-      // Prevent writing if interacting with UI
-      const isOverUI = isMenuOpen || hoverElement !== null;
-      const isWriting = (hand.analysis.gesture === 'POINTING' && !isOverUI);
-
-      if (isWriting) {
-        if (!airCanvas.currentStroke) {
-          airCanvas.startStroke(idxTip.x, idxTip.y, activeColor, lineWidth);
-        } else {
-          airCanvas.addPoint(idxTip.x, idxTip.y);
-          if (window.cyberAudio && Math.random() < 0.25) {
-            window.cyberAudio.playLaserPulse(1 + (idxTip.y / canvasElement.height) * 0.5);
-          }
-          window.particleSystem.emit(idxTip.x, idxTip.y, 2, activeColor, 1.8);
-        }
-
-        // Draw dynamic laser writing brush on fingertip
-        ctx.save();
-        // Outer pulsing laser ring
-        ctx.beginPath();
-        const pulse = 12 + Math.sin(Date.now() * 0.015) * 4;
-        ctx.arc(idxTip.x, idxTip.y, pulse, 0, Math.PI * 2);
-        ctx.strokeStyle = activeColor;
-        ctx.lineWidth = 2.5;
-        ctx.shadowColor = activeColor;
-        ctx.shadowBlur = 16;
-        ctx.stroke();
-
-        // Crosshairs
-        ctx.beginPath();
-        ctx.moveTo(idxTip.x - 16, idxTip.y);
-        ctx.lineTo(idxTip.x + 16, idxTip.y);
-        ctx.moveTo(idxTip.x, idxTip.y - 16);
-        ctx.lineTo(idxTip.x, idxTip.y + 16);
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = '#ffffff';
-        ctx.stroke();
-
-        // Floating status text next to fingertip
-        ctx.font = 'bold 12px Orbitron, sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowColor = activeColor;
-        ctx.shadowBlur = 8;
-        ctx.fillText('✍️ ESCRIBIENDO', idxTip.x + 22, idxTip.y - 8);
-        ctx.restore();
-
-      } else {
-        if (airCanvas.currentStroke) {
-          airCanvas.endStroke();
-        }
-
-        // Idle fingertip pointer circle
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(idxTip.x, idxTip.y, 7, 0, Math.PI * 2);
-        ctx.strokeStyle = activeColor;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // Pinch to grab and distort drawn strokes
-      if (hand.analysis.isPinching) {
-        const pinchPt = toScreen(hand.analysis.pinchCenter);
-        airCanvas.grabOrDrag(pinchPt.x, pinchPt.y, true);
-        window.particleSystem.emit(pinchPt.x, pinchPt.y, 1, '#ff007f', 1);
-      } else {
-        airCanvas.grabOrDrag(0, 0, false);
-      }
-    }
   }
 
   // Mode 3: Deformable Spacetime Mesh
@@ -568,12 +488,15 @@
     
     handlePhotoDragging(handsData);
     handleHoverClick(handsData);
+    handleMenuExpansion(handsData);
 
     requestAnimationFrame(render);
   }
   
   // Hand-based Hover Click Logic (Menu Navigation)
   function handleHoverClick(hands) {
+    if (!isMenuOpen) return; // Only process hover if menu is open
+    
     let pointingHand = null;
     
     // Buscar mano apuntando
@@ -628,9 +551,7 @@
             if (window.cyberAudio) window.cyberAudio.playPinch(true);
             
             // Ejecutar la acción
-            if (hovered.id === 'spatial-menu-btn') {
-              toggleSpatialMenu();
-            } else if (hovered.classList.contains('mode-tab')) {
+            if (hovered.classList.contains('mode-tab')) {
               changeMode(hovered.dataset.mode);
               toggleSpatialMenu(false); // Cerrar menú al elegir
             }
@@ -649,9 +570,51 @@
     }
   }
 
+  // Two-hand expansion logic to open/close menu
+  let lastHandsDist = -1;
+  
+  function handleMenuExpansion(hands) {
+    if (hands.length === 2) {
+      // Usar OPEN_HAND o FLAT_HAND en ambas manos para detectar expansión intencional
+      const h1Gesture = hands[0].analysis.gesture;
+      const h2Gesture = hands[1].analysis.gesture;
+      
+      const isHand1Open = h1Gesture === 'OPEN_HAND' || h1Gesture === 'FLAT_HAND';
+      const isHand2Open = h2Gesture === 'OPEN_HAND' || h2Gesture === 'FLAT_HAND';
+      
+      if (isHand1Open && isHand2Open) {
+        const x1 = hands[0].screenWrist.x;
+        const x2 = hands[1].screenWrist.x;
+        const dist = Math.abs(x1 - x2);
+        
+        if (lastHandsDist !== -1) {
+          const delta = dist - lastHandsDist;
+          
+          if (delta > 80 && !isMenuOpen) {
+            // Expansion rápida detectada -> Abrir menú
+            toggleSpatialMenu(true);
+            if (window.cyberAudio) window.cyberAudio.playClear();
+            lastHandsDist = -1; // reset para requerir nuevo gesto
+            return;
+          } else if (delta < -80 && isMenuOpen) {
+            // Contracción rápida detectada -> Cerrar menú
+            toggleSpatialMenu(false);
+            if (window.cyberAudio) window.cyberAudio.playPinch(false);
+            lastHandsDist = -1;
+            return;
+          }
+        }
+        lastHandsDist = dist;
+      } else {
+        lastHandsDist = -1;
+      }
+    } else {
+      lastHandsDist = -1;
+    }
+  }
+
   function toggleSpatialMenu(forceState) {
     const options = document.getElementById('spatial-menu-options');
-    const btn = document.getElementById('spatial-menu-btn');
     if (typeof forceState !== 'undefined') {
       isMenuOpen = forceState;
     } else {
@@ -660,12 +623,17 @@
     
     if (isMenuOpen) {
       options.style.display = 'flex';
-      btn.style.boxShadow = `0 0 25px ${activeColor}`;
-      btn.style.borderColor = activeColor;
+      // Animación pop
+      options.style.transform = 'scale(0.8)';
+      options.style.opacity = '0';
+      options.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      
+      requestAnimationFrame(() => {
+        options.style.transform = 'scale(1)';
+        options.style.opacity = '1';
+      });
     } else {
       options.style.display = 'none';
-      btn.style.boxShadow = `0 0 15px var(--primary-glow)`;
-      btn.style.borderColor = `var(--primary)`;
     }
   }
 
@@ -924,14 +892,10 @@
   }
 
   function updateModeUI(mode) {
-    const airCanvasHint = document.getElementById('aircanvas-hint');
-    const airCanvasControls = document.getElementById('aircanvas-controls');
     const wireframe3dControls = document.getElementById('wireframe3d-controls');
     const mobileWireframe3dControls = document.getElementById('mobile-wireframe3d-controls');
     const devDashboard = document.getElementById('dev-dashboard');
 
-    if (airCanvasHint) airCanvasHint.style.display = (mode === 'aircanvas') ? 'block' : 'none';
-    if (airCanvasControls) airCanvasControls.style.display = (mode === 'aircanvas') ? 'flex' : 'none';
     if (wireframe3dControls) wireframe3dControls.style.display = (mode === 'wireframe3d') ? 'flex' : 'none';
     if (mobileWireframe3dControls) mobileWireframe3dControls.style.display = (mode === 'wireframe3d') ? 'flex' : 'none';
     if (devDashboard) {

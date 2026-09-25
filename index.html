@@ -232,22 +232,7 @@
           </button>
         </div>
 
-        <!-- Air Canvas Writing Controls -->
-        <div id="aircanvas-controls" class="control-group" style="display: none; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 12px; margin-top: 4px;">
-          <div class="control-label">
-            <span>Acciones de Escritura</span>
-          </div>
-          <div style="display: flex; gap: 6px;">
-            <button id="undo-stroke-btn" class="action-btn" style="flex: 1; padding: 6px 10px; font-size: 0.78rem; justify-content: center;">↩️ Deshacer</button>
-            <button id="clear-canvas-btn" class="action-btn" style="flex: 1; padding: 6px 10px; font-size: 0.78rem; justify-content: center; border-color: rgba(255, 0, 127, 0.5);">🧹 Borrar</button>
-          </div>
-        </div>
       </aside>
-
-      <!-- Hint banner when in Air Canvas mode -->
-      <div id="aircanvas-hint" class="glass-panel" style="display: none; position: absolute; top: 90px; left: 50%; transform: translateX(-50%); padding: 10px 24px; border-radius: 25px; font-size: 0.9rem; font-weight: 600; color: #fff; background: rgba(0, 243, 255, 0.2); border: 1px solid var(--primary); box-shadow: 0 0 20px var(--primary-glow); z-index: 20; text-align: center; pointer-events: none;">
-        ✍️ MODO ESCRITURA ACTIVO: Mueve la punta de tu dedo índice ☝️ para escribir en la pantalla
-      </div>
 
       <!-- Dev Dashboard (HTML Overlay) -->
       <div id="dev-dashboard" class="glass-panel hud-interactive dev-dashboard-panel" style="display: none;">
@@ -310,21 +295,16 @@
       </div>
 
       <!-- Floating Menu (Spatial Hover Navigation) -->
-      <div id="spatial-menu-container" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; gap: 10px;">
-        <!-- Botón Principal -->
-        <button id="spatial-menu-btn" class="glass-panel hud-interactive hover-clickable" style="border-radius: 50%; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; cursor: pointer; border: 2px solid var(--primary); box-shadow: 0 0 15px var(--primary-glow); background: rgba(13, 17, 27, 0.9);">
-          <span style="pointer-events: none; color: white;">☰</span>
-        </button>
+      <div id="spatial-menu-container" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none;">
         
         <!-- Lista de Modos (Oculta por defecto) -->
-        <div id="spatial-menu-options" class="glass-panel hud-interactive" style="display: none; flex-direction: column; gap: 8px; padding: 12px; border-radius: 20px; background: rgba(0,0,0,0.85); min-width: 160px;">
-          <button class="mode-tab hover-clickable active" data-mode="aircanvas" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">✍️</span> <span style="font-size: 0.9rem;">Escribir</span></button>
+        <div id="spatial-menu-options" class="glass-panel hud-interactive" style="display: none; flex-direction: column; gap: 8px; padding: 12px; border-radius: 20px; background: rgba(0,0,0,0.85); min-width: 160px; pointer-events: auto;">
+          <button class="mode-tab hover-clickable active" data-mode="camera" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">📸</span> <span style="font-size: 0.9rem;">Cámara</span></button>
           <button class="mode-tab hover-clickable" data-mode="wireframe3d" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">🎲</span> <span style="font-size: 0.9rem;">Objeto 3D</span></button>
           <button class="mode-tab hover-clickable" data-mode="harp" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">🎸</span> <span style="font-size: 0.9rem;">Hilos</span></button>
           <button class="mode-tab hover-clickable" data-mode="grid" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">🕸️</span> <span style="font-size: 0.9rem;">Malla</span></button>
           <button class="mode-tab hover-clickable" data-mode="beams" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">⚡</span> <span style="font-size: 0.9rem;">Láser</span></button>
           <button class="mode-tab hover-clickable" data-mode="dashboard" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">💻</span> <span style="font-size: 0.9rem;">Dev Dashboard</span></button>
-          <button class="mode-tab hover-clickable" data-mode="camera" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">📸</span> <span style="font-size: 0.9rem;">Cámara</span></button>
         </div>
       </div>
     </div>
