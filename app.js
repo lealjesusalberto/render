@@ -451,13 +451,14 @@
         
         const now = Date.now();
         if (now - lastCaptureTime > 2000) { // 2 second cooldown
-          // Flash effect
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-          ctx.fillRect(frameRect.x, frameRect.y, frameRect.w, frameRect.h);
-          
+          // Tomar la foto primero ANTES de dibujar el flash blanco
           capturePhotoFromRect(frameRect);
           lastCaptureTime = now;
           if (window.cyberAudio) window.cyberAudio.playClear();
+
+          // Dibujar el Flash effect después de tomar la foto
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.fillRect(frameRect.x, frameRect.y, frameRect.w, frameRect.h);
         }
         
         ctx.restore();
