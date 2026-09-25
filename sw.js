@@ -1,10 +1,10 @@
-const CACHE_NAME = 'cyberhand-v1';
+const CACHE_NAME = 'cyberhand-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './style.css',
-  './app.js',
-  './wireframe3d.js',
+  './style.css?v=2.1',
+  './app.js?v=2.1',
+  './wireframe3d.js?v=2.1',
   './physics.js',
   './gestures.js',
   './audio.js',
@@ -15,11 +15,12 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Pre-caching offline static assets');
+      console.log('[Service Worker v2] Caching fresh assets');
       return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -29,7 +30,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('[Service Worker] Removing old cache', key);
+            console.log('[Service Worker] Deleting old cache:', key);
             return caches.delete(key);
           }
         })
@@ -38,17 +39,13 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Network-First Strategy for Instant Updates on Reload
 self.addEventListener('fetch', (event) => {
-  // Ignore non-GET requests
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        // Cache valid local resources
+    fetch(event.request)
+      .then((networkResponse) => {
         if (
           networkResponse &&
           networkResponse.status === 200 &&
@@ -60,11 +57,15 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        if (event.request.headers.get('accept')?.includes('text/html')) {
-          return caches.match('./index.html');
-        }
-      });
-    })
+      })
+      .catch(() => {
+        // Offline fallback to cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          if (event.request.headers.get('accept')?.includes('text/html')) {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });

@@ -5,7 +5,73 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CYBERHAND // Interfaz Gestual & Física de Líneas</title>
   <meta name="description" content="Aplicación PWA interactiva de visión por computadora y realidad aumentada para manipular líneas, objetos 3D y escribir en el aire con gestos de la mano.">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2.1">
+
+  <!-- Mobile Priority Styling Override (Immediate Cache-Busting) -->
+  <style>
+    @media (max-width: 768px) {
+      .brand-badge, 
+      .header-actions, 
+      .status-item.desktop-only, 
+      .hud-sidebar, 
+      .gesture-guide-card {
+        display: none !important;
+      }
+      .hud-header {
+        justify-content: flex-end !important;
+        padding: 0 !important;
+      }
+      .status-widget {
+        padding: 4px 10px !important;
+        background: rgba(13, 17, 27, 0.75) !important;
+        border-radius: 16px !important;
+      }
+      .status-dot {
+        width: 8px !important;
+        height: 8px !important;
+      }
+      .status-value {
+        font-size: 0.8rem !important;
+      }
+      .hud-modes-dock {
+        width: auto !important;
+        max-width: calc(100vw - 20px) !important;
+        padding: 4px 6px !important;
+        gap: 4px !important;
+        border-radius: 24px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        transform: none !important;
+        margin-bottom: 4px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+      }
+      .hud-modes-dock::-webkit-scrollbar {
+        display: none !important;
+      }
+      .mode-tab {
+        padding: 6px 10px !important;
+        font-size: 0.72rem !important;
+        gap: 4px !important;
+        border-radius: 16px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+      }
+      .mode-tab .mode-icon {
+        font-size: 0.85rem !important;
+      }
+      .hud-layer {
+        padding: 12px 10px 8px 10px !important;
+      }
+      #aircanvas-hint {
+        top: 50px !important;
+        font-size: 0.75rem !important;
+        padding: 6px 14px !important;
+        max-width: 90% !important;
+        border-radius: 16px !important;
+      }
+    }
+  </style>
 
   <!-- PWA Manifest & Mobile Icons -->
   <link rel="manifest" href="manifest.json">
@@ -20,13 +86,16 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
-  <!-- PWA Service Worker Registration -->
+  <!-- PWA Service Worker Registration with Immediate Update -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('PWA Service Worker registrado con éxito:', reg.scope))
-          .catch((err) => console.warn('Fallo al registrar Service Worker:', err));
+        navigator.serviceWorker.register('./sw.js?v=2.1')
+          .then((reg) => {
+            console.log('PWA Service Worker registrado:', reg.scope);
+            reg.update();
+          })
+          .catch((err) => console.warn('SW error:', err));
       });
     }
   </script>
