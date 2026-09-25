@@ -74,10 +74,16 @@ class GestureRecognizer {
     let gestureName = 'Detectando...';
     let icon = '✋';
 
+    const isFrame = indexExtended && thumbExtended && !middleExtended && !ringExtended && !pinkyExtended;
+
     if (isPinching) {
       gesture = 'PINCH';
       gestureName = 'Pellizco (Agarrar)';
       icon = '👌';
+    } else if (isFrame) {
+      gesture = 'FRAME';
+      gestureName = 'Encuadre (Foto)';
+      icon = '📸';
     } else if (isPointing) {
       gesture = 'POINTING';
       gestureName = 'Escribiendo (Índice)';
@@ -86,10 +92,6 @@ class GestureRecognizer {
       gesture = 'PEACE';
       gestureName = 'Paz (Control)';
       icon = '✌️';
-    } else if (indexExtended && thumbExtended && !middleExtended && !ringExtended && !pinkyExtended) {
-      gesture = 'FRAME';
-      gestureName = 'Encuadre (Foto)';
-      icon = '📸';
     } else if (!indexExtended && !middleExtended && !ringExtended && !pinkyExtended && !thumbExtended) {
       gesture = 'FIST';
       gestureName = 'Puño (Atracción)';

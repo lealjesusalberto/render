@@ -39,6 +39,7 @@
   let handsData = [];
   let isVideoReady = false;
   let frameCaptureProgress = 0;
+  let lastCaptureTime = 0;
 
   // Hand Connections for Skeleton drawing
   const HAND_CONNECTIONS = [
@@ -448,40 +449,19 @@
         ctx.stroke();
         ctx.setLineDash([]);
         
-        // Draw progress circle
-        frameCaptureProgress += 2.5; 
-        const cx = frameRect.x + frameRect.w / 2;
-        const cy = frameRect.y + frameRect.h / 2;
-        
-        ctx.beginPath();
-        ctx.arc(cx, cy, 24, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.arc(cx, cy, 24, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * (frameCaptureProgress / 100)));
-        ctx.strokeStyle = '#ff007f';
-        ctx.stroke();
-        
-        ctx.fillStyle = '#fff';
-        ctx.font = '12px var(--font-hud)';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('📸', cx, cy);
+        const now = Date.now();
+        if (now - lastCaptureTime > 2000) { // 2 second cooldown
+          // Flash effect
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.fillRect(frameRect.x, frameRect.y, frameRect.w, frameRect.h);
+          
+          capturePhotoFromRect(frameRect);
+          lastCaptureTime = now;
+          if (window.cyberAudio) window.cyberAudio.playClear();
+        }
         
         ctx.restore();
-        
-        if (frameCaptureProgress >= 100) {
-           capturePhotoFromRect(frameRect);
-           frameCaptureProgress = 0; 
-           if (window.cyberAudio) window.cyberAudio.playClear();
-        }
       }
-    }
-    
-    if (!isFraming) {
-      frameCaptureProgress = 0;
     }
   }
 
