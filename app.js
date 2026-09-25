@@ -574,8 +574,8 @@
 
     for (let i = 0; i < hands.length; i++) {
       const hand = hands[i];
-      // Allow swiping with an open hand
-      if (hand.analysis.gesture === 'OPEN_HAND' || hand.analysis.gesture === 'FLAT_HAND') {
+      // Allow swiping with a closed hand (FIST)
+      if (hand.analysis.gesture === 'FIST') {
         const x = hand.screenWrist.x; // Pixeles en pantalla
         
         if (!handXHistory[i]) handXHistory[i] = [];
