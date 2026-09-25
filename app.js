@@ -415,39 +415,8 @@
     wireframe3d.draw(ctx, activeColor);
   }
 
-  // Main Render Loop
-  function render() {
-    // Clear canvas
-    ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
-    // Draw active mode
-    switch (currentMode) {
-      case 'wireframe3d':
-        renderWireframe3DMode();
-        break;
-      case 'harp':
-        renderHarpMode();
-        break;
-      case 'aircanvas':
-        renderAirCanvasMode();
-        break;
-      case 'grid':
-        renderGridMode();
-        break;
-      case 'beams':
-        renderBeamsMode();
-        break;
-    }
-
-    // Always draw hand skeleton tracker on top
-    for (const hand of handsData) {
-      drawHandSkeleton(hand.landmarks, hand.handedness, hand.analysis.isPinching, activeColor);
-    }
-
-    // Draw energy particle system
-    window.particleSystem.updateAndDraw(ctx);
-
-    // Director Frame Capture Logic
+  // Mode 6: Camera Framing Mode
+  function renderCameraMode() {
     let isFraming = false;
     
     if (handsData.length === 2) {
@@ -514,6 +483,44 @@
     if (!isFraming) {
       frameCaptureProgress = 0;
     }
+  }
+
+  // Main Render Loop
+  function render() {
+    // Clear canvas
+    ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+    // Draw active mode
+    switch (currentMode) {
+      case 'wireframe3d':
+        renderWireframe3DMode();
+        break;
+      case 'harp':
+        renderHarpMode();
+        break;
+      case 'aircanvas':
+        renderAirCanvasMode();
+        break;
+      case 'grid':
+        renderGridMode();
+        break;
+      case 'beams':
+        renderBeamsMode();
+        break;
+      case 'camera':
+        renderCameraMode();
+        break;
+    }
+
+    // Always draw hand skeleton tracker on top, UNLESS in camera mode
+    if (currentMode !== 'camera') {
+      for (const hand of handsData) {
+        drawHandSkeleton(hand.landmarks, hand.handedness, hand.analysis.isPinching, activeColor);
+      }
+    }
+
+    // Draw energy particle system
+    window.particleSystem.updateAndDraw(ctx);
 
     // Calculate FPS
     frameCount++;
