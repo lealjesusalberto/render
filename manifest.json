@@ -1,0 +1,32 @@
+{
+  "name": "Cyberhand // Gestural Motion & 3D Lab",
+  "short_name": "Cyberhand",
+  "description": "Aplicación PWA con IA de visión por computadora para manipular objetos 3D, escribir en el aire y controlar física de líneas con las manos.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#07090e",
+  "theme_color": "#00f3ff",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["graphics", "utilities", "entertainment"]
+}

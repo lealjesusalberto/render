@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0e1726"/>
+      <stop offset="100%" stop-color="#05070a"/>
+    </radialGradient>
+    <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="24" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="cyberCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f3ff"/>
+      <stop offset="100%" stop-color="#ff007f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="512" height="512" rx="110" fill="url(#bgGrad)" stroke="#00f3ff" stroke-width="4" stroke-opacity="0.4"/>
+
+  <!-- Cybernetic Grid in Background -->
+  <path d="M64 128h384M64 256h384M64 384h384M128 64v384M256 64v384M384 64v384" stroke="#00f3ff" stroke-width="1.5" stroke-opacity="0.1"/>
+
+  <!-- Central 3D Cube & Hand Energy Symbol -->
+  <g filter="url(#neonGlow)">
+    <!-- 3D Cube Wireframe -->
+    <path d="M256 96 L376 160 L376 296 L256 360 L136 296 L136 160 Z" fill="rgba(0, 243, 255, 0.12)" stroke="#00f3ff" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M256 96 L256 228 M376 160 L256 228 M136 160 L256 228 M256 228 L256 360" stroke="#00f3ff" stroke-width="6" stroke-linejoin="round"/>
+    
+    <!-- Neon Hand Laser Nodes -->
+    <circle cx="256" cy="96" r="14" fill="#ffffff" stroke="#ff007f" stroke-width="4"/>
+    <circle cx="376" cy="160" r="14" fill="#ffffff" stroke="#00f3ff" stroke-width="4"/>
+    <circle cx="136" cy="160" r="14" fill="#ffffff" stroke="#00f3ff" stroke-width="4"/>
+    <circle cx="256" cy="228" r="16" fill="#ff007f" stroke="#ffffff" stroke-width="4"/>
+    <circle cx="256" cy="360" r="14" fill="#ffffff" stroke="#00f3ff" stroke-width="4"/>
+    <circle cx="376" cy="296" r="14" fill="#ffffff" stroke="#ff007f" stroke-width="4"/>
+    <circle cx="136" cy="296" r="14" fill="#ffffff" stroke="#ff007f" stroke-width="4"/>
+
+    <!-- Central Energy Core -->
+    <circle cx="256" cy="228" r="32" fill="none" stroke="#00f3ff" stroke-width="3" stroke-dasharray="6,6"/>
+  </g>
+
+  <!-- Cyberhand Text Tag -->
+  <text x="256" y="440" font-family="'Orbitron', sans-serif" font-size="34" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="6">CYBERHAND</text>
+  <text x="256" y="470" font-family="'Outfit', sans-serif" font-size="18" font-weight="600" fill="#00f3ff" text-anchor="middle" letter-spacing="3">PWA // GESTURE 3D LAB</text>
+</svg>
