@@ -473,8 +473,8 @@
           window.particleSystem.emit(h1.screenTips.index.x, h1.screenTips.index.y, 1, activeColor, 1);
           window.particleSystem.emit(h2.screenTips.thumb.x, h2.screenTips.thumb.y, 1, activeColor, 1);
         }
-        // Wait for 1 second logic (60fps * 1 = 60 frames)
-        frameCaptureProgress += (100 / 60);
+        // Wait for 0.5 second logic (60fps * 0.5 = 30 frames)
+        frameCaptureProgress += (100 / 30);
         
         const cx = frameRect.x + frameRect.w / 2;
         const cy = frameRect.y + frameRect.h / 2;
