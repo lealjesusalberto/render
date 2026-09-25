@@ -466,22 +466,45 @@
         }
       }
 
-      // Universal Pinch-to-Click for DOM elements
+      // Universal Pinch-to-Click and Pinch-to-Drag for DOM elements
       if (isPinchingGlobal && pinchPtGlobal) {
         const now = Date.now();
-        if (!window.lastPinchClick || (now - window.lastPinchClick > 500)) {
-           // Hide canvas temporarily to find underlying DOM element
-           canvasElement.style.pointerEvents = 'none';
-           const el = document.elementFromPoint(pinchPtGlobal.x, pinchPtGlobal.y);
-           canvasElement.style.pointerEvents = 'auto'; // restore
-           
-           if (el && (el.tagName === 'BUTTON' || el.closest('.task-item') || el.closest('.hud-interactive'))) {
-              el.click();
-              window.lastPinchClick = now;
-              window.particleSystem.emit(pinchPtGlobal.x, pinchPtGlobal.y, 6, activeColor, 3);
-              if (window.cyberAudio) window.cyberAudio.playPinch(true);
+        // Hide canvas temporarily to find underlying DOM element
+        canvasElement.style.pointerEvents = 'none';
+        const el = document.elementFromPoint(pinchPtGlobal.x, pinchPtGlobal.y);
+        canvasElement.style.pointerEvents = 'auto'; // restore
+        
+        // Comprobar si se agarró la cabecera del dashboard
+        if (!window.pinchDraggedElement && el && el.closest('#dev-dashboard-header')) {
+           window.pinchDraggedElement = document.getElementById('dev-dashboard');
+           const rect = window.pinchDraggedElement.getBoundingClientRect();
+           window.pinchOffsetX = pinchPtGlobal.x - rect.left;
+           window.pinchOffsetY = pinchPtGlobal.y - rect.top;
+           if (window.cyberAudio) window.cyberAudio.playPinch(true);
+        }
+
+        if (window.pinchDraggedElement) {
+           // Mover el panel al arrastrar
+           window.pinchDraggedElement.style.left = `${pinchPtGlobal.x - window.pinchOffsetX}px`;
+           window.pinchDraggedElement.style.top = `${pinchPtGlobal.y - window.pinchOffsetY}px`;
+           window.pinchDraggedElement.style.transform = 'none';
+        } else {
+           // Lógica normal de clic si no se está arrastrando nada
+           if (!window.lastPinchClick || (now - window.lastPinchClick > 500)) {
+              if (el && (el.tagName === 'BUTTON' || el.closest('.task-item') || el.closest('.hud-interactive'))) {
+                 // No hacer clic en el botón si lo que queríamos era arrastrar (evita clic accidental en cabecera)
+                 if (!el.closest('#dev-dashboard-header') || el.tagName === 'BUTTON') {
+                    el.click();
+                    window.lastPinchClick = now;
+                    window.particleSystem.emit(pinchPtGlobal.x, pinchPtGlobal.y, 6, activeColor, 3);
+                    if (window.cyberAudio) window.cyberAudio.playPinch(true);
+                 }
+              }
            }
         }
+      } else {
+        // Soltar el elemento arrastrado cuando se deja de pellizcar
+        window.pinchDraggedElement = null;
       }
 
       gestureLabel.textContent = primaryGestureName;

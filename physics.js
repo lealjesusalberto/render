@@ -542,6 +542,59 @@ class TaskManager {
     }
 
     this.renderDOM();
+    this.makeDraggable();
+  }
+
+  makeDraggable() {
+    const header = document.getElementById('dev-dashboard-header');
+    const dashboard = document.getElementById('dev-dashboard');
+    if (!header || !dashboard) return;
+
+    let isDragging = false;
+    let startX, startY, initialLeft, initialTop;
+
+    const onStart = (e) => {
+      if (e.target.id === 'voice-dictate-btn') return; // no arrastrar si clic en botón
+      isDragging = true;
+      header.style.cursor = 'grabbing';
+      
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
+      startX = clientX;
+      startY = clientY;
+      
+      const rect = dashboard.getBoundingClientRect();
+      initialLeft = rect.left;
+      initialTop = rect.top;
+    };
+
+    const onMove = (e) => {
+      if (!isDragging) return;
+      
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
+      const dx = clientX - startX;
+      const dy = clientY - startY;
+      
+      dashboard.style.left = `${initialLeft + dx}px`;
+      dashboard.style.top = `${initialTop + dy}px`;
+      dashboard.style.transform = 'none'; // Anular el translate default
+    };
+
+    const onEnd = () => {
+      isDragging = false;
+      header.style.cursor = 'grab';
+    };
+
+    header.addEventListener('mousedown', onStart);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+    
+    header.addEventListener('touchstart', onStart, {passive: true});
+    document.addEventListener('touchmove', onMove, {passive: true});
+    document.addEventListener('touchend', onEnd);
   }
 
   setupSpeechRecognition() {
@@ -627,7 +680,7 @@ class TaskManager {
        
        const span = document.createElement('span');
        span.style.flex = '1';
-       span.style.fontSize = '0.9rem';
+       span.style.fontSize = '0.8rem';
        span.textContent = task.text;
        
        li.appendChild(check);

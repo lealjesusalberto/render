@@ -250,12 +250,12 @@
       </div>
 
       <!-- Dev Dashboard (HTML Overlay) -->
-      <div id="dev-dashboard" class="glass-panel hud-interactive" style="display: none; position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; padding: 20px; border-radius: 16px; flex-direction: column; gap: 15px; background: rgba(13, 17, 27, 0.85); z-index: 40;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h2 style="font-family: var(--font-hud); font-size: 1.1rem; color: #fff; margin:0;">💻 Dev Dashboard</h2>
-          <button id="voice-dictate-btn" class="action-btn" style="background: rgba(255,0,127,0.2); border-color: var(--accent); color: #fff; padding: 6px 12px; font-size: 0.8rem;">🎤 Dictar</button>
+      <div id="dev-dashboard" class="glass-panel hud-interactive" style="display: none; position: absolute; top: 80px; left: 20px; width: 280px; padding: 12px; border-radius: 12px; flex-direction: column; gap: 10px; background: rgba(13, 17, 27, 0.85); z-index: 40; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+        <div id="dev-dashboard-header" style="display: flex; justify-content: space-between; align-items: center; cursor: grab; padding-bottom: 8px; border-bottom: 1px solid rgba(0,243,255,0.2);">
+          <h2 style="font-family: var(--font-hud); font-size: 0.9rem; color: #fff; margin:0; pointer-events: none;">💻 Dev Dashboard</h2>
+          <button id="voice-dictate-btn" class="action-btn" style="background: rgba(255,0,127,0.2); border-color: var(--accent); color: #fff; padding: 4px 8px; font-size: 0.7rem; pointer-events: auto;">🎤 Dictar</button>
         </div>
-        <ul id="task-list" style="list-style: none; display: flex; flex-direction: column; gap: 8px; margin:0; padding:0; max-height: 50vh; overflow-y: auto;">
+        <ul id="task-list" style="list-style: none; display: flex; flex-direction: column; gap: 6px; margin:0; padding:0; max-height: 45vh; overflow-y: auto;">
           <!-- Las tareas se inyectan aquí -->
         </ul>
       </div>
