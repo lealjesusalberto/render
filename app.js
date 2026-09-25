@@ -439,15 +439,33 @@
         
         const frameRect = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
         
-        // Draw the framing box
+        // Draw the framing box using energy strings!
         ctx.save();
         ctx.beginPath();
-        ctx.rect(frameRect.x, frameRect.y, frameRect.w, frameRect.h);
+        ctx.moveTo(h1.screenTips.thumb.x, h1.screenTips.thumb.y);
+        ctx.lineTo(h1.screenTips.index.x, h1.screenTips.index.y);
+        ctx.lineTo(h2.screenTips.index.x, h2.screenTips.index.y);
+        ctx.lineTo(h2.screenTips.thumb.x, h2.screenTips.thumb.y);
+        ctx.closePath();
+        
+        // Outer glow
+        ctx.lineWidth = lineWidth * 0.8;
         ctx.strokeStyle = activeColor;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([10, 10]);
+        ctx.shadowColor = activeColor;
+        ctx.shadowBlur = 15;
         ctx.stroke();
-        ctx.setLineDash([]);
+        
+        // Inner white core
+        ctx.lineWidth = lineWidth * 0.4;
+        ctx.strokeStyle = '#ffffff';
+        ctx.shadowBlur = 5;
+        ctx.stroke();
+        
+        // Sparkles on the corners
+        if (Math.random() < 0.3) {
+          window.particleSystem.emit(h1.screenTips.index.x, h1.screenTips.index.y, 1, activeColor, 1);
+          window.particleSystem.emit(h2.screenTips.thumb.x, h2.screenTips.thumb.y, 1, activeColor, 1);
+        }
         
         const now = Date.now();
         if (now - lastCaptureTime > 2000) { // 2 second cooldown
@@ -888,8 +906,13 @@
     const div = document.createElement('div');
     div.className = 'glass-panel hud-interactive';
     div.style.position = 'absolute';
-    div.style.left = (canvasElement.width / 2 - width / 2) + 'px';
-    div.style.top = (canvasElement.height / 2 - height / 2) + 'px';
+    
+    // Spawn at slightly randomized locations so they don't overlap completely
+    const randomOffsetX = (Math.random() - 0.5) * 150;
+    const randomOffsetY = (Math.random() - 0.5) * 150;
+    div.style.left = (canvasElement.width / 2 - width / 2 + randomOffsetX) + 'px';
+    div.style.top = (canvasElement.height / 2 - height / 2 + randomOffsetY) + 'px';
+    
     div.style.width = width + 'px';
     div.style.height = height + 'px';
     div.style.minWidth = '100px';
