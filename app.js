@@ -151,73 +151,6 @@
     ctx.restore();
   }
 
-  // Mode 1: Elastic Strings + Inter-finger Web
-  function renderHarpMode() {
-    // Background harp strings
-    harpEngine.interact(handsData, activeColor);
-    harpEngine.draw(ctx, activeColor);
-
-    // Dynamic webs connecting fingertips of each hand
-    ctx.save();
-    for (const hand of handsData) {
-      const tips = [
-        hand.screenTips.thumb,
-        hand.screenTips.index,
-        hand.screenTips.middle,
-        hand.screenTips.ring,
-        hand.screenTips.pinky
-      ];
-
-      ctx.beginPath();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = activeColor;
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = activeColor;
-
-      for (let i = 0; i < tips.length; i++) {
-        for (let j = i + 1; j < tips.length; j++) {
-          ctx.moveTo(tips[i].x, tips[i].y);
-          ctx.lineTo(tips[j].x, tips[j].y);
-        }
-      }
-      ctx.globalAlpha = 0.45;
-      ctx.stroke();
-    }
-
-    // Two-Hands Quantum Bridge (Lightning arc between hands)
-    if (handsData.length >= 2) {
-      const h1Index = handsData[0].screenTips.index;
-      const h2Index = handsData[1].screenTips.index;
-      const dist = Math.hypot(h2Index.x - h1Index.x, h2Index.y - h1Index.y);
-
-      ctx.beginPath();
-      ctx.moveTo(h1Index.x, h1Index.y);
-
-      // Jitter lightning arc
-      const steps = 10;
-      for (let i = 1; i < steps; i++) {
-        const t = i / steps;
-        const x = h1Index.x + (h2Index.x - h1Index.x) * t;
-        const y = h1Index.y + (h2Index.y - h1Index.y) * t;
-        const jitter = (Math.random() - 0.5) * Math.min(50, dist * 0.2);
-        ctx.lineTo(x + jitter, y + jitter);
-      }
-      ctx.lineTo(h2Index.x, h2Index.y);
-
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#ffffff';
-      ctx.shadowColor = activeColor;
-      ctx.shadowBlur = 20;
-      ctx.globalAlpha = 0.9;
-      ctx.stroke();
-
-      if (Math.random() < 0.3) {
-        window.particleSystem.emit((h1Index.x + h2Index.x) / 2, (h1Index.y + h2Index.y) / 2, 3, activeColor, 2);
-      }
-    }
-    ctx.restore();
-  }
-
   // Mode 3: Deformable Spacetime Mesh
   function renderGridMode() {
     let isPinching = false;
@@ -233,113 +166,6 @@
 
     gridEngine.interact(handsData, isPinching, pinchPt.x, pinchPt.y, activeColor);
     gridEngine.draw(ctx, activeColor);
-  }
-
-  // Mode 4: Laser Beams & Cosmic Singularity
-  function renderBeamsMode() {
-    ctx.save();
-    
-    // Connect fingers between two hands!
-    if (handsData.length >= 2) {
-      const h1 = handsData[0];
-      const h2 = handsData[1];
-      const fingers = ['thumb', 'index', 'middle', 'ring', 'pinky'];
-      
-      for (const finger of fingers) {
-        const p1 = h1.screenTips[finger];
-        const p2 = h2.screenTips[finger];
-        
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        
-        // Add a jagged lightning/energy effect by drawing a segmented line
-        const segs = 6;
-        for (let i = 1; i <= segs; i++) {
-          const t = i / segs;
-          const cx = p1.x + (p2.x - p1.x) * t;
-          const cy = p1.y + (p2.y - p1.y) * t;
-          const jitterX = (Math.random() - 0.5) * 15 * (1 - Math.abs(t - 0.5) * 2);
-          const jitterY = (Math.random() - 0.5) * 15 * (1 - Math.abs(t - 0.5) * 2);
-          
-          if (i === segs) {
-            ctx.lineTo(p2.x, p2.y);
-          } else {
-            ctx.lineTo(cx + jitterX, cy + jitterY);
-          }
-        }
-        
-        ctx.lineWidth = lineWidth * 0.8;
-        ctx.strokeStyle = activeColor;
-        ctx.shadowColor = activeColor;
-        ctx.shadowBlur = 15;
-        ctx.stroke();
-        
-        ctx.lineWidth = lineWidth * 0.4;
-        ctx.strokeStyle = '#ffffff';
-        ctx.shadowBlur = 5;
-        ctx.stroke();
-        
-        if (Math.random() < 0.2) {
-          const midX = (p1.x + p2.x) / 2;
-          const midY = (p1.y + p2.y) / 2;
-          window.particleSystem.emit(midX, midY, 1, activeColor, 1);
-        }
-      }
-    }
-
-    for (const hand of handsData) {
-      const isFist = hand.analysis.gesture === 'FIST';
-      const wrist = hand.screenWrist;
-
-      if (isFist) {
-        // Gravitational singularity pull
-        ctx.beginPath();
-        ctx.arc(wrist.x, wrist.y, 25 + Math.sin(Date.now() * 0.01) * 6, 0, Math.PI * 2);
-        ctx.fillStyle = '#000000';
-        ctx.shadowColor = activeColor;
-        ctx.shadowBlur = 30;
-        ctx.fill();
-
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = activeColor;
-        ctx.stroke();
-
-        // Accretion swirl particles
-        window.particleSystem.emit(wrist.x, wrist.y, 4, activeColor, 4);
-      } else if (handsData.length < 2) {
-        // Laser rays projecting from all 5 fingertips
-        for (const key in hand.screenTips) {
-          const tip = hand.screenTips[key];
-          const dx = tip.x - wrist.x;
-          const dy = tip.y - wrist.y;
-          const len = Math.hypot(dx, dy) || 1;
-          const beamLen = Math.max(canvasElement.width, canvasElement.height);
-
-          const targetX = tip.x + (dx / len) * beamLen;
-          const targetY = tip.y + (dy / len) * beamLen;
-
-          const grad = ctx.createLinearGradient(tip.x, tip.y, targetX, targetY);
-          grad.addColorStop(0, '#ffffff');
-          grad.addColorStop(0.1, activeColor);
-          grad.addColorStop(1, 'transparent');
-
-          ctx.beginPath();
-          ctx.moveTo(tip.x, tip.y);
-          ctx.lineTo(targetX, targetY);
-
-          ctx.lineWidth = lineWidth * 0.75;
-          ctx.strokeStyle = grad;
-          ctx.shadowColor = activeColor;
-          ctx.shadowBlur = 15;
-          ctx.stroke();
-
-          if (Math.random() < 0.25) {
-            window.particleSystem.emit(tip.x, tip.y, 2, activeColor, 2);
-          }
-        }
-      }
-    }
-    ctx.restore();
   }
 
   // Mode 5: Interactive 3D Wireframe Sculptor (Move, Rotate, Stretch, Sculpt)
@@ -449,17 +275,8 @@
       case 'wireframe3d':
         renderWireframe3DMode();
         break;
-      case 'harp':
-        renderHarpMode();
-        break;
-      case 'aircanvas':
-        renderAirCanvasMode();
-        break;
       case 'grid':
         renderGridMode();
-        break;
-      case 'beams':
-        renderBeamsMode();
         break;
       case 'camera':
         renderCameraMode();
