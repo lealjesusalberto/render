@@ -518,17 +518,73 @@ window.SpacetimeMesh = SpacetimeMesh;
 window.ElasticHarp = ElasticHarp;
 window.AirCanvasManager = AirCanvasManager;
 
-// Tareas UI Manager
+// Tareas UI Manager y Dashboard de Ingeniería
 class TaskManager {
   constructor() {
-    this.isOpen = false;
-    this.buttonRect = { x: 20, y: 80, w: 160, h: 40 };
+    this.isOpen = true; // Por defecto abierto en esta vista
+    this.buttonRect = { x: 20, y: 80, w: 200, h: 45 };
+    this.voiceBtnRect = { x: 20, y: 135, w: 200, h: 40 };
+    
+    // Tareas orientadas a Ingeniería de Software
     this.tasks = [
-      { text: "Meet con el equipo - 10:00 AM", done: false },
-      { text: "Reunión cliente coste", done: false },
-      { text: "Revisar correos de clientes", done: false }
+      { text: "Daily Standup - 10:00 AM", done: false },
+      { text: "Revisar Pull Request #42", done: false },
+      { text: "Optimizar query de base de datos", done: false },
+      { text: "Desplegar v2.1 a Producción", done: false }
     ];
     this.lastToggleTime = 0;
+    
+    // Web Speech API
+    this.isListening = false;
+    this.recognition = null;
+    this.setupSpeechRecognition();
+  }
+
+  setupSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      this.recognition = new SpeechRecognition();
+      this.recognition.lang = 'es-ES'; // Idioma español
+      this.recognition.continuous = false;
+      this.recognition.interimResults = false;
+
+      this.recognition.onstart = () => {
+        this.isListening = true;
+      };
+
+      this.recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+           // Añadir lo que el usuario dictó como nueva tarea
+           this.tasks.push({ text: "🗣️ " + transcript, done: false });
+           if (window.cyberAudio) window.cyberAudio.playPluck(500, 1);
+        }
+      };
+
+      this.recognition.onerror = (event) => {
+        console.warn("Error de reconocimiento de voz:", event.error);
+        this.isListening = false;
+      };
+
+      this.recognition.onend = () => {
+        this.isListening = false;
+      };
+    } else {
+      console.warn("Web Speech API no soportada en este navegador.");
+    }
+  }
+
+  toggleListening() {
+    if (!this.recognition) return;
+    if (this.isListening) {
+      this.recognition.stop();
+    } else {
+      try {
+        this.recognition.start();
+      } catch (e) {
+        console.error(e);
+      }
+    }
   }
 
   updateAndDraw(ctx, handsData, activeColor) {
@@ -546,7 +602,7 @@ class TaskManager {
       }
     }
 
-    // Check main button click
+    // Comprobar clic en el botón principal (Dashboard)
     if (isPinching && pinchPt && (now - this.lastToggleTime > 400)) {
       if (
         pinchPt.x >= this.buttonRect.x && pinchPt.x <= this.buttonRect.x + this.buttonRect.w &&
@@ -557,11 +613,23 @@ class TaskManager {
         if (window.particleSystem) window.particleSystem.emit(pinchPt.x, pinchPt.y, 5, activeColor, 3);
         if (window.cyberAudio) window.cyberAudio.playPinch(true);
       }
+      
+      // Comprobar clic en botón de voz
+      if (
+        this.isOpen &&
+        pinchPt.x >= this.voiceBtnRect.x && pinchPt.x <= this.voiceBtnRect.x + this.voiceBtnRect.w &&
+        pinchPt.y >= this.voiceBtnRect.y && pinchPt.y <= this.voiceBtnRect.y + this.voiceBtnRect.h
+      ) {
+         this.toggleListening();
+         this.lastToggleTime = now;
+         if (window.particleSystem) window.particleSystem.emit(pinchPt.x, pinchPt.y, 8, '#ff007f', 4);
+         if (window.cyberAudio) window.cyberAudio.playPinch(true);
+      }
     }
 
     ctx.save();
     
-    // Draw Button
+    // Dibujar Botón Principal (Header del Dashboard)
     ctx.beginPath();
     if (ctx.roundRect) {
       ctx.roundRect(this.buttonRect.x, this.buttonRect.y, this.buttonRect.w, this.buttonRect.h, 8);
@@ -575,17 +643,33 @@ class TaskManager {
     ctx.stroke();
 
     ctx.fillStyle = this.isOpen ? '#000' : '#fff';
-    ctx.font = 'bold 14px "Orbitron", sans-serif';
+    ctx.font = 'bold 15px "Orbitron", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('📋 Tareas de hoy', this.buttonRect.x + this.buttonRect.w / 2, this.buttonRect.y + this.buttonRect.h / 2);
+    ctx.fillText('💻 Dev Dashboard', this.buttonRect.x + this.buttonRect.w / 2, this.buttonRect.y + this.buttonRect.h / 2);
 
-    // Draw List
+    // Dibujar Lista y Botón de Voz
     if (this.isOpen) {
+      // Botón de Dictado por Voz
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(this.voiceBtnRect.x, this.voiceBtnRect.y, this.voiceBtnRect.w, this.voiceBtnRect.h, 8);
+      else ctx.rect(this.voiceBtnRect.x, this.voiceBtnRect.y, this.voiceBtnRect.w, this.voiceBtnRect.h);
+      
+      ctx.fillStyle = this.isListening ? '#ff007f' : 'rgba(13, 17, 27, 0.85)';
+      ctx.fill();
+      ctx.strokeStyle = this.isListening ? '#fff' : '#ff007f';
+      ctx.stroke();
+      
+      ctx.fillStyle = '#fff';
+      ctx.font = '13px "Orbitron", sans-serif';
+      const voiceText = this.isListening ? "🎙️ Escuchando..." : "🎤 Dictar Tarea";
+      ctx.fillText(voiceText, this.voiceBtnRect.x + this.voiceBtnRect.w / 2, this.voiceBtnRect.y + this.voiceBtnRect.h / 2);
+
+      // Panel de Lista
       const listX = this.buttonRect.x;
-      const listY = this.buttonRect.y + this.buttonRect.h + 10;
-      const listW = 260;
-      const listH = this.tasks.length * 40 + 20;
+      const listY = this.voiceBtnRect.y + this.voiceBtnRect.h + 10;
+      const listW = 320;
+      const listH = this.tasks.length * 45 + 20;
 
       ctx.beginPath();
       if (ctx.roundRect) {
@@ -595,6 +679,7 @@ class TaskManager {
       }
       ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
       ctx.fill();
+      ctx.strokeStyle = activeColor;
       ctx.stroke();
 
       ctx.textAlign = 'left';
@@ -602,11 +687,11 @@ class TaskManager {
       ctx.font = '14px Arial, sans-serif';
 
       for (let i = 0; i < this.tasks.length; i++) {
-        const taskY = listY + 20 + (i * 40);
+        const taskY = listY + 25 + (i * 45);
         
         // Draw Checkbox
         ctx.beginPath();
-        ctx.rect(listX + 15, taskY - 12, 18, 18);
+        ctx.rect(listX + 15, taskY - 14, 20, 20);
         ctx.strokeStyle = activeColor;
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -615,7 +700,7 @@ class TaskManager {
         if (isPinching && pinchPt && (now - this.lastToggleTime > 400)) {
           if (
             pinchPt.x >= listX + 5 && pinchPt.x <= listX + listW &&
-            pinchPt.y >= taskY - 20 && pinchPt.y <= taskY + 10
+            pinchPt.y >= taskY - 20 && pinchPt.y <= taskY + 15
           ) {
             this.tasks[i].done = !this.tasks[i].done;
             this.lastToggleTime = now;
@@ -626,9 +711,9 @@ class TaskManager {
 
         if (this.tasks[i].done) {
           ctx.beginPath();
-          ctx.moveTo(listX + 18, taskY - 2);
-          ctx.lineTo(listX + 23, taskY + 4);
-          ctx.lineTo(listX + 31, taskY - 10);
+          ctx.moveTo(listX + 19, taskY - 2);
+          ctx.lineTo(listX + 25, taskY + 5);
+          ctx.lineTo(listX + 33, taskY - 10);
           ctx.strokeStyle = '#0f0';
           ctx.stroke();
           ctx.fillStyle = '#888';
@@ -636,13 +721,13 @@ class TaskManager {
           ctx.fillStyle = '#fff';
         }
 
-        ctx.fillText(this.tasks[i].text, listX + 45, taskY);
+        ctx.fillText(this.tasks[i].text, listX + 50, taskY + 1);
         
         // Draw strikethrough if done
         if (this.tasks[i].done) {
            ctx.beginPath();
-           ctx.moveTo(listX + 45, taskY);
-           ctx.lineTo(listX + 45 + ctx.measureText(this.tasks[i].text).width, taskY);
+           ctx.moveTo(listX + 50, taskY);
+           ctx.lineTo(listX + 50 + ctx.measureText(this.tasks[i].text).width, taskY);
            ctx.strokeStyle = '#888';
            ctx.lineWidth = 1;
            ctx.stroke();
