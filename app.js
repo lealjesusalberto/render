@@ -29,7 +29,7 @@
   const hudSidebar = document.getElementById('hud-sidebar');
 
   // State
-  let currentMode = 'aircanvas'; // 'aircanvas' | 'wireframe3d' | 'harp' | 'grid' | 'beams'
+  let currentMode = 'camera'; // 'camera' | 'wireframe3d' | 'harp' | 'grid' | 'beams'
   let activeColor = '#00f3ff';
   let lineWidth = 4;
   let cameraOpacity = 0.85;
@@ -571,11 +571,10 @@
   }
 
   // Two-hand expansion logic to open/close menu
-  let lastHandsDist = -1;
+  let handsDistHistory = [];
   
   function handleMenuExpansion(hands) {
     if (hands.length === 2) {
-      // Usar OPEN_HAND o FLAT_HAND en ambas manos para detectar expansión intencional
       const h1Gesture = hands[0].analysis.gesture;
       const h2Gesture = hands[1].analysis.gesture;
       
@@ -587,29 +586,35 @@
         const x2 = hands[1].screenWrist.x;
         const dist = Math.abs(x1 - x2);
         
-        if (lastHandsDist !== -1) {
-          const delta = dist - lastHandsDist;
+        handsDistHistory.push(dist);
+        if (handsDistHistory.length > 10) {
+          handsDistHistory.shift();
+        }
+        
+        if (handsDistHistory.length >= 5) {
+          const oldest = handsDistHistory[0];
+          const newest = handsDistHistory[handsDistHistory.length - 1];
+          const delta = newest - oldest;
           
-          if (delta > 80 && !isMenuOpen) {
-            // Expansion rápida detectada -> Abrir menú
+          if (delta > 60 && !isMenuOpen) {
+            // Expansion detectada -> Abrir menú
             toggleSpatialMenu(true);
             if (window.cyberAudio) window.cyberAudio.playClear();
-            lastHandsDist = -1; // reset para requerir nuevo gesto
+            handsDistHistory = []; // reset
             return;
-          } else if (delta < -80 && isMenuOpen) {
-            // Contracción rápida detectada -> Cerrar menú
+          } else if (delta < -60 && isMenuOpen) {
+            // Contracción detectada -> Cerrar menú
             toggleSpatialMenu(false);
             if (window.cyberAudio) window.cyberAudio.playPinch(false);
-            lastHandsDist = -1;
+            handsDistHistory = []; // reset
             return;
           }
         }
-        lastHandsDist = dist;
       } else {
-        lastHandsDist = -1;
+        handsDistHistory = [];
       }
     } else {
-      lastHandsDist = -1;
+      handsDistHistory = [];
     }
   }
 
