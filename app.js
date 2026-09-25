@@ -43,6 +43,10 @@
   let draggedPhotoElement = null;
   let dragHandIndex = -1;
   let dragOffset = { x: 0, y: 0 };
+  
+  const MODES_ORDER = ['aircanvas', 'wireframe3d', 'harp', 'grid', 'beams', 'dashboard', 'camera'];
+  let lastSwipeTime = 0;
+  let handXHistory = { 0: [], 1: [] };
 
   // Hand Connections for Skeleton drawing
   const HAND_CONNECTIONS = [
@@ -558,10 +562,68 @@
     }
     
     handlePhotoDragging(handsData);
+    handleModeSwipe(handsData);
 
     requestAnimationFrame(render);
   }
   
+  // Hand-based Mode Swipe Logic
+  function handleModeSwipe(hands) {
+    const now = Date.now();
+    if (now - lastSwipeTime < 600) return; // Cooldown for swipes
+
+    for (let i = 0; i < hands.length; i++) {
+      const hand = hands[i];
+      // Allow swiping with an open hand
+      if (hand.analysis.gesture === 'OPEN_HAND' || hand.analysis.gesture === 'FLAT_HAND') {
+        const x = hand.wrist.x; // Normalized X
+        
+        if (!handXHistory[i]) handXHistory[i] = [];
+        handXHistory[i].push(x);
+        
+        if (handXHistory[i].length > 15) {
+          handXHistory[i].shift();
+        }
+        
+        if (handXHistory[i].length >= 5) {
+          const oldest = handXHistory[i][0];
+          const newest = handXHistory[i][handXHistory[i].length - 1];
+          const delta = newest - oldest;
+          
+          if (Math.abs(delta) > 0.15) { // Threshold for swipe
+             const currentIndex = MODES_ORDER.indexOf(currentMode);
+             let newIndex = currentIndex;
+             
+             // Nota: En mediapipe X va de 0 a 1 (izquierda a derecha original).
+             // Pero la pantalla está espejada, por lo que el delta visual se invierte.
+             // Deslizamiento rápido
+             if (delta > 0) {
+                // Swipe a la derecha (físicamente) -> Avanzar en el menú
+                newIndex = Math.min(MODES_ORDER.length - 1, currentIndex + 1);
+             } else {
+                // Swipe a la izquierda (físicamente) -> Retroceder
+                newIndex = Math.max(0, currentIndex - 1);
+             }
+             
+             if (newIndex !== currentIndex) {
+                const newMode = MODES_ORDER[newIndex];
+                changeMode(newMode);
+                lastSwipeTime = now;
+                handXHistory = { 0: [], 1: [] };
+                
+                // Efectos visuales de swipe global
+                ctx.fillStyle = 'rgba(0, 243, 255, 0.1)';
+                ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+                break;
+             }
+          }
+        }
+      } else {
+        if (handXHistory[i]) handXHistory[i] = [];
+      }
+    }
+  }
+
   // Hand-based Photo Dragging Logic
   function handlePhotoDragging(hands) {
     let flatHand = null;
@@ -834,14 +896,25 @@
     }
   }
 
+  function changeMode(modeId) {
+    currentMode = modeId;
+    updateModeUI(currentMode);
+    
+    modeTabs.forEach(t => {
+      t.classList.remove('active');
+      if (t.dataset.mode === modeId) {
+        t.classList.add('active');
+        t.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    });
+    
+    if (window.cyberAudio) window.cyberAudio.playPinch(true);
+  }
+
   // UI Event Listeners
   modeTabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      modeTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentMode = tab.dataset.mode;
-      updateModeUI(currentMode);
-      if (window.cyberAudio) window.cyberAudio.playPinch(true);
+      changeMode(tab.dataset.mode);
     });
   });
 
