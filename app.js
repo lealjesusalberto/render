@@ -40,6 +40,9 @@
   let isVideoReady = false;
   let frameCaptureProgress = 0;
   let lastCaptureTime = 0;
+  let draggedPhotoElement = null;
+  let dragHandIndex = -1;
+  let dragOffset = { x: 0, y: 0 };
 
   // Hand Connections for Skeleton drawing
   const HAND_CONNECTIONS = [
@@ -530,8 +533,74 @@
       frameCount = 0;
       lastFrameTime = now;
     }
+    
+    handlePhotoDragging(handsData);
 
     requestAnimationFrame(render);
+  }
+  
+  // Hand-based Photo Dragging Logic
+  function handlePhotoDragging(hands) {
+    let flatHand = null;
+    let flatHandIdx = -1;
+    
+    // Encontrar una mano que esté haciendo FLAT_HAND (Mano plana / dedos pegados)
+    for (let i = 0; i < hands.length; i++) {
+      if (hands[i].analysis.gesture === 'FLAT_HAND') {
+        flatHand = hands[i];
+        flatHandIdx = i;
+        break;
+      }
+    }
+    
+    if (flatHand) {
+      // Usar la punta del dedo medio como punto central de la "paleta" de la mano
+      const px = flatHand.screenTips.middle.x;
+      const py = flatHand.screenTips.middle.y;
+      
+      // Dibujar indicador visual de agarre espacial
+      ctx.beginPath();
+      ctx.arc(px, py, 15, 0, Math.PI * 2);
+      ctx.fillStyle = draggedPhotoElement ? 'rgba(0, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.4)';
+      ctx.fill();
+      
+      if (!draggedPhotoElement) {
+        // Intentar agarrar una foto bajo la mano
+        const photos = document.querySelectorAll('.polaroid-photo');
+        // Buscar desde la última (la más arriba en z-index usualmente)
+        for (let i = photos.length - 1; i >= 0; i--) {
+          const p = photos[i];
+          const rect = p.getBoundingClientRect();
+          if (px > rect.left && px < rect.right && py > rect.top && py < rect.bottom) {
+            draggedPhotoElement = p;
+            dragHandIndex = flatHandIdx;
+            dragOffset.x = px - rect.left;
+            dragOffset.y = py - rect.top;
+            
+            // Efecto visual de agarre
+            p.style.zIndex = '202';
+            p.style.boxShadow = `0 15px 35px ${activeColor}88`; 
+            if (window.cyberAudio) window.cyberAudio.playPinch(true);
+            break; // solo agarrar una
+          }
+        }
+      } else {
+        // Si ya estamos arrastrando, actualizar posición
+        if (flatHandIdx === dragHandIndex) {
+          draggedPhotoElement.style.left = (px - dragOffset.x) + 'px';
+          draggedPhotoElement.style.top = (py - dragOffset.y) + 'px';
+        }
+      }
+    } else {
+      // Soltar la foto si la mano ya no es FLAT_HAND
+      if (draggedPhotoElement) {
+        draggedPhotoElement.style.zIndex = '200';
+        draggedPhotoElement.style.boxShadow = '2px 6px 15px rgba(0,0,0,0.6)';
+        draggedPhotoElement = null;
+        dragHandIndex = -1;
+        if (window.cyberAudio) window.cyberAudio.playPinch(false);
+      }
+    }
   }
 
   // Handle MediaPipe Results

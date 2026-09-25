@@ -76,6 +76,13 @@ class GestureRecognizer {
 
     const isFrame = indexExtended && thumbExtended && !middleExtended && !ringExtended && !pinkyExtended;
 
+    const fingersTogether = 
+      this.dist2D(indexTip, middleTip) < handScale * 0.6 &&
+      this.dist2D(middleTip, ringTip) < handScale * 0.6 &&
+      this.dist2D(ringTip, pinkyTip) < handScale * 0.6;
+      
+    const isOpenHand = indexExtended && middleExtended && ringExtended && pinkyExtended;
+
     if (isPinching) {
       gesture = 'PINCH';
       gestureName = 'Pellizco (Agarrar)';
@@ -88,6 +95,10 @@ class GestureRecognizer {
       gesture = 'POINTING';
       gestureName = 'Escribiendo (Índice)';
       icon = '✍️';
+    } else if (isOpenHand && fingersTogether) {
+      gesture = 'FLAT_HAND';
+      gestureName = 'Mano Plana (Mover)';
+      icon = '✋';
     } else if (indexExtended && middleExtended && !ringExtended && !pinkyExtended) {
       gesture = 'PEACE';
       gestureName = 'Paz (Control)';
@@ -96,7 +107,7 @@ class GestureRecognizer {
       gesture = 'FIST';
       gestureName = 'Puño (Atracción)';
       icon = '✊';
-    } else if (indexExtended && middleExtended && ringExtended && pinkyExtended && thumbExtended) {
+    } else if (isOpenHand) {
       gesture = 'OPEN_HAND';
       gestureName = 'Mano Abierta';
       icon = '🖐️';
