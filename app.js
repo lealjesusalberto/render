@@ -387,19 +387,11 @@
       case 'beams':
         renderBeamsMode();
         break;
-      case 'dashboard':
-        // Dev Dashboard mode: Just renders the task manager UI without extra physics
-        break;
     }
 
     // Always draw hand skeleton tracker on top
     for (const hand of handsData) {
       drawHandSkeleton(hand.landmarks, hand.handedness, hand.analysis.isPinching, activeColor);
-    }
-
-    // Draw Task Manager HUD solo en el modo dashboard
-    if (window.taskManager && currentMode === 'dashboard') {
-      window.taskManager.updateAndDraw(ctx, handsData, activeColor);
     }
 
     // Draw energy particle system
@@ -434,6 +426,9 @@
       let primaryGestureName = 'Seguimiento Activo';
       let primaryIcon = '✋';
 
+      let isPinchingGlobal = false;
+      let pinchPtGlobal = null;
+
       for (let i = 0; i < numHands; i++) {
         const landmarks = results.multiHandLandmarks[i];
         const handednessInfo = results.multiHandedness && results.multiHandedness[i] 
@@ -460,9 +455,32 @@
           screenWrist
         });
 
+        if (analysis.isPinching) {
+          isPinchingGlobal = true;
+          pinchPtGlobal = screenTips.index;
+        }
+
         if (i === 0 && analysis) {
           primaryGestureName = analysis.gestureName;
           primaryIcon = analysis.icon;
+        }
+      }
+
+      // Universal Pinch-to-Click for DOM elements
+      if (isPinchingGlobal && pinchPtGlobal) {
+        const now = Date.now();
+        if (!window.lastPinchClick || (now - window.lastPinchClick > 500)) {
+           // Hide canvas temporarily to find underlying DOM element
+           canvasElement.style.pointerEvents = 'none';
+           const el = document.elementFromPoint(pinchPtGlobal.x, pinchPtGlobal.y);
+           canvasElement.style.pointerEvents = 'auto'; // restore
+           
+           if (el && (el.tagName === 'BUTTON' || el.closest('.task-item') || el.closest('.hud-interactive'))) {
+              el.click();
+              window.lastPinchClick = now;
+              window.particleSystem.emit(pinchPtGlobal.x, pinchPtGlobal.y, 6, activeColor, 3);
+              if (window.cyberAudio) window.cyberAudio.playPinch(true);
+           }
         }
       }
 
@@ -564,11 +582,13 @@
     const airCanvasControls = document.getElementById('aircanvas-controls');
     const wireframe3dControls = document.getElementById('wireframe3d-controls');
     const mobileWireframe3dControls = document.getElementById('mobile-wireframe3d-controls');
+    const devDashboard = document.getElementById('dev-dashboard');
 
     if (airCanvasHint) airCanvasHint.style.display = (mode === 'aircanvas') ? 'block' : 'none';
     if (airCanvasControls) airCanvasControls.style.display = (mode === 'aircanvas') ? 'flex' : 'none';
     if (wireframe3dControls) wireframe3dControls.style.display = (mode === 'wireframe3d') ? 'flex' : 'none';
     if (mobileWireframe3dControls) mobileWireframe3dControls.style.display = (mode === 'wireframe3d') ? 'flex' : 'none';
+    if (devDashboard) devDashboard.style.display = (mode === 'dashboard') ? 'flex' : 'none';
   }
 
   // UI Event Listeners

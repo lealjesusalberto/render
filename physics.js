@@ -518,59 +518,79 @@ window.SpacetimeMesh = SpacetimeMesh;
 window.ElasticHarp = ElasticHarp;
 window.AirCanvasManager = AirCanvasManager;
 
-// Tareas UI Manager y Dashboard de Ingeniería
+// Tareas UI Manager y Dashboard de Ingeniería (DOM Based)
 class TaskManager {
   constructor() {
-    this.isOpen = true; // Por defecto abierto en esta vista
-    this.buttonRect = { x: 20, y: 80, w: 200, h: 45 };
-    this.voiceBtnRect = { x: 20, y: 135, w: 200, h: 40 };
-    
-    // Tareas orientadas a Ingeniería de Software
     this.tasks = [
       { text: "Daily Standup - 10:00 AM", done: false },
       { text: "Revisar Pull Request #42", done: false },
       { text: "Optimizar query de base de datos", done: false },
       { text: "Desplegar v2.1 a Producción", done: false }
     ];
-    this.lastToggleTime = 0;
+    
+    // DOM Elements
+    this.listEl = document.getElementById('task-list');
+    this.voiceBtn = document.getElementById('voice-dictate-btn');
     
     // Web Speech API
     this.isListening = false;
     this.recognition = null;
     this.setupSpeechRecognition();
+
+    if (this.voiceBtn) {
+       this.voiceBtn.addEventListener('click', () => this.toggleListening());
+    }
+
+    this.renderDOM();
   }
 
   setupSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       this.recognition = new SpeechRecognition();
-      this.recognition.lang = 'es-ES'; // Idioma español
+      this.recognition.lang = 'es-ES';
       this.recognition.continuous = false;
       this.recognition.interimResults = false;
 
       this.recognition.onstart = () => {
         this.isListening = true;
+        this.updateVoiceBtn();
       };
 
       this.recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         if (transcript) {
-           // Añadir lo que el usuario dictó como nueva tarea
            this.tasks.push({ text: "🗣️ " + transcript, done: false });
            if (window.cyberAudio) window.cyberAudio.playPluck(500, 1);
+           this.renderDOM();
         }
       };
 
       this.recognition.onerror = (event) => {
         console.warn("Error de reconocimiento de voz:", event.error);
         this.isListening = false;
+        this.updateVoiceBtn();
       };
 
       this.recognition.onend = () => {
         this.isListening = false;
+        this.updateVoiceBtn();
       };
     } else {
       console.warn("Web Speech API no soportada en este navegador.");
+      if (this.voiceBtn) this.voiceBtn.style.display = 'none';
+    }
+  }
+
+  updateVoiceBtn() {
+    if (!this.voiceBtn) return;
+    if (this.isListening) {
+       this.voiceBtn.innerHTML = '🎙️ Escuchando...';
+       this.voiceBtn.style.background = 'rgba(255,0,127,0.5)';
+       this.voiceBtn.style.color = '#fff';
+    } else {
+       this.voiceBtn.innerHTML = '🎤 Dictar';
+       this.voiceBtn.style.background = 'rgba(255,0,127,0.2)';
     }
   }
 
@@ -582,159 +602,42 @@ class TaskManager {
       try {
         this.recognition.start();
       } catch (e) {
-        console.error(e);
+        console.error("Error al iniciar reconocimiento:", e);
       }
     }
   }
 
-  updateAndDraw(ctx, handsData, activeColor) {
-    const now = Date.now();
-    let isPinching = false;
-    let pinchPt = null;
+  toggleTask(index) {
+     this.tasks[index].done = !this.tasks[index].done;
+     if (window.cyberAudio) window.cyberAudio.playPinch(false);
+     this.renderDOM();
+  }
 
-    if (handsData && handsData.length > 0) {
-      for (const hand of handsData) {
-        if (hand.analysis.isPinching) {
-          isPinching = true;
-          pinchPt = hand.screenTips.index;
-          break;
-        }
-      }
-    }
-
-    // Comprobar clic en el botón principal (Dashboard)
-    if (isPinching && pinchPt && (now - this.lastToggleTime > 400)) {
-      if (
-        pinchPt.x >= this.buttonRect.x && pinchPt.x <= this.buttonRect.x + this.buttonRect.w &&
-        pinchPt.y >= this.buttonRect.y && pinchPt.y <= this.buttonRect.y + this.buttonRect.h
-      ) {
-        this.isOpen = !this.isOpen;
-        this.lastToggleTime = now;
-        if (window.particleSystem) window.particleSystem.emit(pinchPt.x, pinchPt.y, 5, activeColor, 3);
-        if (window.cyberAudio) window.cyberAudio.playPinch(true);
-      }
-      
-      // Comprobar clic en botón de voz
-      if (
-        this.isOpen &&
-        pinchPt.x >= this.voiceBtnRect.x && pinchPt.x <= this.voiceBtnRect.x + this.voiceBtnRect.w &&
-        pinchPt.y >= this.voiceBtnRect.y && pinchPt.y <= this.voiceBtnRect.y + this.voiceBtnRect.h
-      ) {
-         this.toggleListening();
-         this.lastToggleTime = now;
-         if (window.particleSystem) window.particleSystem.emit(pinchPt.x, pinchPt.y, 8, '#ff007f', 4);
-         if (window.cyberAudio) window.cyberAudio.playPinch(true);
-      }
-    }
-
-    ctx.save();
+  renderDOM() {
+    if (!this.listEl) return;
+    this.listEl.innerHTML = '';
     
-    // Dibujar Botón Principal (Header del Dashboard)
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(this.buttonRect.x, this.buttonRect.y, this.buttonRect.w, this.buttonRect.h, 8);
-    } else {
-      ctx.rect(this.buttonRect.x, this.buttonRect.y, this.buttonRect.w, this.buttonRect.h);
-    }
-    ctx.fillStyle = this.isOpen ? activeColor : 'rgba(0, 0, 0, 0.7)';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = activeColor;
-    ctx.stroke();
-
-    ctx.fillStyle = this.isOpen ? '#000' : '#fff';
-    ctx.font = 'bold 15px "Orbitron", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('💻 Dev Dashboard', this.buttonRect.x + this.buttonRect.w / 2, this.buttonRect.y + this.buttonRect.h / 2);
-
-    // Dibujar Lista y Botón de Voz
-    if (this.isOpen) {
-      // Botón de Dictado por Voz
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(this.voiceBtnRect.x, this.voiceBtnRect.y, this.voiceBtnRect.w, this.voiceBtnRect.h, 8);
-      else ctx.rect(this.voiceBtnRect.x, this.voiceBtnRect.y, this.voiceBtnRect.w, this.voiceBtnRect.h);
-      
-      ctx.fillStyle = this.isListening ? '#ff007f' : 'rgba(13, 17, 27, 0.85)';
-      ctx.fill();
-      ctx.strokeStyle = this.isListening ? '#fff' : '#ff007f';
-      ctx.stroke();
-      
-      ctx.fillStyle = '#fff';
-      ctx.font = '13px "Orbitron", sans-serif';
-      const voiceText = this.isListening ? "🎙️ Escuchando..." : "🎤 Dictar Tarea";
-      ctx.fillText(voiceText, this.voiceBtnRect.x + this.voiceBtnRect.w / 2, this.voiceBtnRect.y + this.voiceBtnRect.h / 2);
-
-      // Panel de Lista
-      const listX = this.buttonRect.x;
-      const listY = this.voiceBtnRect.y + this.voiceBtnRect.h + 10;
-      const listW = 320;
-      const listH = this.tasks.length * 45 + 20;
-
-      ctx.beginPath();
-      if (ctx.roundRect) {
-        ctx.roundRect(listX, listY, listW, listH, 8);
-      } else {
-        ctx.rect(listX, listY, listW, listH);
-      }
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-      ctx.fill();
-      ctx.strokeStyle = activeColor;
-      ctx.stroke();
-
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#fff';
-      ctx.font = '14px Arial, sans-serif';
-
-      for (let i = 0; i < this.tasks.length; i++) {
-        const taskY = listY + 25 + (i * 45);
-        
-        // Draw Checkbox
-        ctx.beginPath();
-        ctx.rect(listX + 15, taskY - 14, 20, 20);
-        ctx.strokeStyle = activeColor;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // Handle Checkbox click
-        if (isPinching && pinchPt && (now - this.lastToggleTime > 400)) {
-          if (
-            pinchPt.x >= listX + 5 && pinchPt.x <= listX + listW &&
-            pinchPt.y >= taskY - 20 && pinchPt.y <= taskY + 15
-          ) {
-            this.tasks[i].done = !this.tasks[i].done;
-            this.lastToggleTime = now;
-            if (window.particleSystem) window.particleSystem.emit(pinchPt.x, pinchPt.y, 4, '#0f0', 2);
-            if (window.cyberAudio) window.cyberAudio.playPinch(false);
-          }
-        }
-
-        if (this.tasks[i].done) {
-          ctx.beginPath();
-          ctx.moveTo(listX + 19, taskY - 2);
-          ctx.lineTo(listX + 25, taskY + 5);
-          ctx.lineTo(listX + 33, taskY - 10);
-          ctx.strokeStyle = '#0f0';
-          ctx.stroke();
-          ctx.fillStyle = '#888';
-        } else {
-          ctx.fillStyle = '#fff';
-        }
-
-        ctx.fillText(this.tasks[i].text, listX + 50, taskY + 1);
-        
-        // Draw strikethrough if done
-        if (this.tasks[i].done) {
-           ctx.beginPath();
-           ctx.moveTo(listX + 50, taskY);
-           ctx.lineTo(listX + 50 + ctx.measureText(this.tasks[i].text).width, taskY);
-           ctx.strokeStyle = '#888';
-           ctx.lineWidth = 1;
-           ctx.stroke();
-        }
-      }
-    }
-    ctx.restore();
+    this.tasks.forEach((task, index) => {
+       const li = document.createElement('li');
+       li.className = `task-item ${task.done ? 'done' : ''}`;
+       
+       const check = document.createElement('div');
+       check.className = 'task-checkbox';
+       check.innerHTML = task.done ? '✓' : '';
+       
+       const span = document.createElement('span');
+       span.style.flex = '1';
+       span.style.fontSize = '0.9rem';
+       span.textContent = task.text;
+       
+       li.appendChild(check);
+       li.appendChild(span);
+       
+       // Handle clicks
+       li.addEventListener('click', () => this.toggleTask(index));
+       
+       this.listEl.appendChild(li);
+    });
   }
 }
 
