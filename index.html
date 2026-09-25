@@ -309,37 +309,24 @@
         </div>
       </div>
 
-      <!-- Modes Navigation Dock (Bottom Center) -->
-      <nav class="hud-modes-dock hud-interactive">
-        <button class="mode-tab active" data-mode="aircanvas">
-          <span class="mode-icon">✍️</span>
-          <span>Escribir en el Aire</span>
+      <!-- Floating Menu (Spatial Hover Navigation) -->
+      <div id="spatial-menu-container" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column-reverse; align-items: center; gap: 10px;">
+        <!-- Botón Principal -->
+        <button id="spatial-menu-btn" class="glass-panel hud-interactive hover-clickable" style="border-radius: 50%; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; cursor: pointer; border: 2px solid var(--primary); box-shadow: 0 0 15px var(--primary-glow); background: rgba(13, 17, 27, 0.9);">
+          <span style="pointer-events: none; color: white;">☰</span>
         </button>
-        <button class="mode-tab" data-mode="wireframe3d">
-          <span class="mode-icon">🎲</span>
-          <span>Objeto 3D</span>
-        </button>
-        <button class="mode-tab" data-mode="harp">
-          <span class="mode-icon">🎸</span>
-          <span>Hilos Elásticos</span>
-        </button>
-        <button class="mode-tab" data-mode="grid">
-          <span class="mode-icon">🕸️</span>
-          <span>Malla Cuántica</span>
-        </button>
-        <button class="mode-tab" data-mode="beams">
-          <span class="mode-icon">⚡</span>
-          <span>Rayos Láser</span>
-        </button>
-        <button class="mode-tab" data-mode="dashboard">
-          <span class="mode-icon">💻</span>
-          <span>Dev Dashboard</span>
-        </button>
-        <button class="mode-tab" data-mode="camera">
-          <span class="mode-icon">📸</span>
-          <span>Cámara</span>
-        </button>
-      </nav>
+        
+        <!-- Lista de Modos (Oculta por defecto) -->
+        <div id="spatial-menu-options" class="glass-panel hud-interactive" style="display: none; flex-direction: column; gap: 8px; padding: 12px; border-radius: 20px; background: rgba(0,0,0,0.85); min-width: 160px;">
+          <button class="mode-tab hover-clickable active" data-mode="aircanvas" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">✍️</span> <span style="font-size: 0.9rem;">Escribir</span></button>
+          <button class="mode-tab hover-clickable" data-mode="wireframe3d" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">🎲</span> <span style="font-size: 0.9rem;">Objeto 3D</span></button>
+          <button class="mode-tab hover-clickable" data-mode="harp" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">🎸</span> <span style="font-size: 0.9rem;">Hilos</span></button>
+          <button class="mode-tab hover-clickable" data-mode="grid" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">🕸️</span> <span style="font-size: 0.9rem;">Malla</span></button>
+          <button class="mode-tab hover-clickable" data-mode="beams" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">⚡</span> <span style="font-size: 0.9rem;">Láser</span></button>
+          <button class="mode-tab hover-clickable" data-mode="dashboard" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">💻</span> <span style="font-size: 0.9rem;">Dev Dashboard</span></button>
+          <button class="mode-tab hover-clickable" data-mode="camera" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; padding: 10px; border-radius: 12px;"><span class="mode-icon">📸</span> <span style="font-size: 0.9rem;">Cámara</span></button>
+        </div>
+      </div>
     </div>
 
     <!-- Loading / Camera Request Screen -->

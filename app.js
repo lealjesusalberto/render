@@ -44,9 +44,11 @@
   let dragHandIndex = -1;
   let dragOffset = { x: 0, y: 0 };
   
-  const MODES_ORDER = ['aircanvas', 'wireframe3d', 'harp', 'grid', 'beams', 'dashboard', 'camera'];
   let lastSwipeTime = 0;
-  let handXHistory = { 0: [], 1: [] };
+  
+  let hoverElement = null;
+  let hoverProgress = 0;
+  let isMenuOpen = false;
 
   // Hand Connections for Skeleton drawing
   const HAND_CONNECTIONS = [
@@ -562,63 +564,105 @@
     }
     
     handlePhotoDragging(handsData);
-    handleModeSwipe(handsData);
+    handleHoverClick(handsData);
 
     requestAnimationFrame(render);
   }
   
-  // Hand-based Mode Swipe Logic
-  function handleModeSwipe(hands) {
-    const now = Date.now();
-    if (now - lastSwipeTime < 600) return; // Cooldown for swipes
-
+  // Hand-based Hover Click Logic (Menu Navigation)
+  function handleHoverClick(hands) {
+    let pointingHand = null;
+    
+    // Buscar mano apuntando
     for (let i = 0; i < hands.length; i++) {
-      const hand = hands[i];
-      // Allow swiping with a closed hand (FIST)
-      if (hand.analysis.gesture === 'FIST') {
-        const x = hand.screenWrist.x; // Pixeles en pantalla
-        
-        if (!handXHistory[i]) handXHistory[i] = [];
-        handXHistory[i].push(x);
-        
-        if (handXHistory[i].length > 15) {
-          handXHistory[i].shift();
-        }
-        
-        if (handXHistory[i].length >= 5) {
-          const oldest = handXHistory[i][0];
-          const newest = handXHistory[i][handXHistory[i].length - 1];
-          const delta = newest - oldest;
+      if (hands[i].analysis.gesture === 'POINTING' || hands[i].analysis.gesture === 'OPEN_HAND') {
+        pointingHand = hands[i];
+        break;
+      }
+    }
+    
+    if (pointingHand) {
+      const px = pointingHand.screenTips.index.x;
+      const py = pointingHand.screenTips.index.y;
+      
+      // Dibujar cursor de hover
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#fff';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      
+      // Encontrar elemento interactivo debajo
+      canvasElement.style.pointerEvents = 'none';
+      const el = document.elementFromPoint(px, py);
+      canvasElement.style.pointerEvents = 'auto';
+      
+      let hovered = null;
+      if (el) {
+        hovered = el.closest('.hover-clickable');
+      }
+      
+      if (hovered && hovered.style.display !== 'none') {
+        if (hoverElement === hovered) {
+          // Aumentar progreso (tarda ~0.8 segundos a 60fps -> 48 frames)
+          hoverProgress += (100 / 48);
           
-          // Umbral de 120 píxeles de movimiento en ~5 frames
-          if (Math.abs(delta) > 120) { 
-             const currentIndex = MODES_ORDER.indexOf(currentMode);
-             let newIndex = currentIndex;
-             
-             // Si mueves la mano hacia la Izquierda (delta < 0), revelas el elemento de la Derecha (+1)
-             // Si mueves la mano hacia la Derecha (delta > 0), revelas el elemento de la Izquierda (-1)
-             if (delta > 0) {
-                newIndex = Math.max(0, currentIndex - 1);
-             } else {
-                newIndex = Math.min(MODES_ORDER.length - 1, currentIndex + 1);
-             }
-             
-             if (newIndex !== currentIndex) {
-                const newMode = MODES_ORDER[newIndex];
-                changeMode(newMode);
-                lastSwipeTime = now;
-                handXHistory = { 0: [], 1: [] };
-                
-                // Efectos visuales de swipe global
-                ctx.fillStyle = 'rgba(0, 243, 255, 0.1)';
-                ctx.fillRect(0, 0, canvasElement.width, canvasElement.height);
-                break;
-             }
+          // Dibujar anillo de progreso
+          ctx.beginPath();
+          ctx.arc(px, py, 18, -Math.PI/2, -Math.PI/2 + (Math.PI * 2 * (hoverProgress/100)));
+          ctx.strokeStyle = activeColor;
+          ctx.lineWidth = 4;
+          ctx.stroke();
+          
+          if (hoverProgress >= 100) {
+            hoverProgress = 0;
+            hoverElement = null; // Reiniciar
+            
+            // Efecto visual y de sonido
+            window.particleSystem.emit(px, py, 12, activeColor, 3);
+            if (window.cyberAudio) window.cyberAudio.playPinch(true);
+            
+            // Ejecutar la acción
+            if (hovered.id === 'spatial-menu-btn') {
+              toggleSpatialMenu();
+            } else if (hovered.classList.contains('mode-tab')) {
+              changeMode(hovered.dataset.mode);
+              toggleSpatialMenu(false); // Cerrar menú al elegir
+            }
           }
+        } else {
+          hoverElement = hovered;
+          hoverProgress = 0;
         }
       } else {
-        if (handXHistory[i]) handXHistory[i] = [];
+        hoverElement = null;
+        hoverProgress = 0;
       }
+    } else {
+      hoverElement = null;
+      hoverProgress = 0;
+    }
+  }
+
+  function toggleSpatialMenu(forceState) {
+    const options = document.getElementById('spatial-menu-options');
+    const btn = document.getElementById('spatial-menu-btn');
+    if (typeof forceState !== 'undefined') {
+      isMenuOpen = forceState;
+    } else {
+      isMenuOpen = !isMenuOpen;
+    }
+    
+    if (isMenuOpen) {
+      options.style.display = 'flex';
+      btn.style.boxShadow = `0 0 25px ${activeColor}`;
+      btn.style.borderColor = activeColor;
+    } else {
+      options.style.display = 'none';
+      btn.style.boxShadow = `0 0 15px var(--primary-glow)`;
+      btn.style.borderColor = `var(--primary)`;
     }
   }
 
