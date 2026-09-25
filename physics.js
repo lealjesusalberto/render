@@ -517,4 +517,142 @@ window.ParticleSystem = ParticleSystem;
 window.SpacetimeMesh = SpacetimeMesh;
 window.ElasticHarp = ElasticHarp;
 window.AirCanvasManager = AirCanvasManager;
+
+// Tareas UI Manager
+class TaskManager {
+  constructor() {
+    this.isOpen = false;
+    this.buttonRect = { x: 20, y: 80, w: 160, h: 40 };
+    this.tasks = [
+      { text: "Meet con el equipo - 10:00 AM", done: false },
+      { text: "Reunión cliente coste", done: false },
+      { text: "Revisar correos de clientes", done: false }
+    ];
+    this.lastToggleTime = 0;
+  }
+
+  updateAndDraw(ctx, handsData, activeColor) {
+    const now = Date.now();
+    let isPinching = false;
+    let pinchPt = null;
+
+    if (handsData && handsData.length > 0) {
+      for (const hand of handsData) {
+        if (hand.analysis.isPinching) {
+          isPinching = true;
+          pinchPt = hand.screenTips.index;
+          break;
+        }
+      }
+    }
+
+    // Check main button click
+    if (isPinching && pinchPt && (now - this.lastToggleTime > 400)) {
+      if (
+        pinchPt.x >= this.buttonRect.x && pinchPt.x <= this.buttonRect.x + this.buttonRect.w &&
+        pinchPt.y >= this.buttonRect.y && pinchPt.y <= this.buttonRect.y + this.buttonRect.h
+      ) {
+        this.isOpen = !this.isOpen;
+        this.lastToggleTime = now;
+        if (window.particleSystem) window.particleSystem.emit(pinchPt.x, pinchPt.y, 5, activeColor, 3);
+        if (window.cyberAudio) window.cyberAudio.playPinch(true);
+      }
+    }
+
+    ctx.save();
+    
+    // Draw Button
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(this.buttonRect.x, this.buttonRect.y, this.buttonRect.w, this.buttonRect.h, 8);
+    } else {
+      ctx.rect(this.buttonRect.x, this.buttonRect.y, this.buttonRect.w, this.buttonRect.h);
+    }
+    ctx.fillStyle = this.isOpen ? activeColor : 'rgba(0, 0, 0, 0.7)';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = activeColor;
+    ctx.stroke();
+
+    ctx.fillStyle = this.isOpen ? '#000' : '#fff';
+    ctx.font = 'bold 14px "Orbitron", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('📋 Tareas de hoy', this.buttonRect.x + this.buttonRect.w / 2, this.buttonRect.y + this.buttonRect.h / 2);
+
+    // Draw List
+    if (this.isOpen) {
+      const listX = this.buttonRect.x;
+      const listY = this.buttonRect.y + this.buttonRect.h + 10;
+      const listW = 260;
+      const listH = this.tasks.length * 40 + 20;
+
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(listX, listY, listW, listH, 8);
+      } else {
+        ctx.rect(listX, listY, listW, listH);
+      }
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px Arial, sans-serif';
+
+      for (let i = 0; i < this.tasks.length; i++) {
+        const taskY = listY + 20 + (i * 40);
+        
+        // Draw Checkbox
+        ctx.beginPath();
+        ctx.rect(listX + 15, taskY - 12, 18, 18);
+        ctx.strokeStyle = activeColor;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Handle Checkbox click
+        if (isPinching && pinchPt && (now - this.lastToggleTime > 400)) {
+          if (
+            pinchPt.x >= listX + 5 && pinchPt.x <= listX + listW &&
+            pinchPt.y >= taskY - 20 && pinchPt.y <= taskY + 10
+          ) {
+            this.tasks[i].done = !this.tasks[i].done;
+            this.lastToggleTime = now;
+            if (window.particleSystem) window.particleSystem.emit(pinchPt.x, pinchPt.y, 4, '#0f0', 2);
+            if (window.cyberAudio) window.cyberAudio.playPinch(false);
+          }
+        }
+
+        if (this.tasks[i].done) {
+          ctx.beginPath();
+          ctx.moveTo(listX + 18, taskY - 2);
+          ctx.lineTo(listX + 23, taskY + 4);
+          ctx.lineTo(listX + 31, taskY - 10);
+          ctx.strokeStyle = '#0f0';
+          ctx.stroke();
+          ctx.fillStyle = '#888';
+        } else {
+          ctx.fillStyle = '#fff';
+        }
+
+        ctx.fillText(this.tasks[i].text, listX + 45, taskY);
+        
+        // Draw strikethrough if done
+        if (this.tasks[i].done) {
+           ctx.beginPath();
+           ctx.moveTo(listX + 45, taskY);
+           ctx.lineTo(listX + 45 + ctx.measureText(this.tasks[i].text).width, taskY);
+           ctx.strokeStyle = '#888';
+           ctx.lineWidth = 1;
+           ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();
+  }
+}
+
+window.TaskManager = TaskManager;
+window.taskManager = new TaskManager();
 window.particleSystem = new ParticleSystem();

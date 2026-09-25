@@ -394,6 +394,11 @@
       drawHandSkeleton(hand.landmarks, hand.handedness, hand.analysis.isPinching, activeColor);
     }
 
+    // Draw Task Manager HUD
+    if (window.taskManager) {
+      window.taskManager.updateAndDraw(ctx, handsData, activeColor);
+    }
+
     // Draw energy particle system
     window.particleSystem.updateAndDraw(ctx);
 
