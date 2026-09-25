@@ -576,7 +576,7 @@
       const hand = hands[i];
       // Allow swiping with an open hand
       if (hand.analysis.gesture === 'OPEN_HAND' || hand.analysis.gesture === 'FLAT_HAND') {
-        const x = hand.wrist.x; // Normalized X
+        const x = hand.screenWrist.x; // Pixeles en pantalla
         
         if (!handXHistory[i]) handXHistory[i] = [];
         handXHistory[i].push(x);
@@ -590,19 +590,17 @@
           const newest = handXHistory[i][handXHistory[i].length - 1];
           const delta = newest - oldest;
           
-          if (Math.abs(delta) > 0.15) { // Threshold for swipe
+          // Umbral de 120 píxeles de movimiento en ~5 frames
+          if (Math.abs(delta) > 120) { 
              const currentIndex = MODES_ORDER.indexOf(currentMode);
              let newIndex = currentIndex;
              
-             // Nota: En mediapipe X va de 0 a 1 (izquierda a derecha original).
-             // Pero la pantalla está espejada, por lo que el delta visual se invierte.
-             // Deslizamiento rápido
+             // Si mueves la mano hacia la Izquierda (delta < 0), revelas el elemento de la Derecha (+1)
+             // Si mueves la mano hacia la Derecha (delta > 0), revelas el elemento de la Izquierda (-1)
              if (delta > 0) {
-                // Swipe a la derecha (físicamente) -> Avanzar en el menú
-                newIndex = Math.min(MODES_ORDER.length - 1, currentIndex + 1);
-             } else {
-                // Swipe a la izquierda (físicamente) -> Retroceder
                 newIndex = Math.max(0, currentIndex - 1);
+             } else {
+                newIndex = Math.min(MODES_ORDER.length - 1, currentIndex + 1);
              }
              
              if (newIndex !== currentIndex) {
