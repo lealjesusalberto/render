@@ -892,8 +892,7 @@
     fullCtx.drawImage(videoElement, -fullCanvas.width, 0, fullCanvas.width, fullCanvas.height);
     fullCtx.restore();
     
-    // Draw UI elements over it
-    fullCtx.drawImage(canvasElement, 0, 0);
+    // NOTA: Se eliminó fullCtx.drawImage(canvasElement, 0, 0); para que la foto quede limpia
     
     // Crop
     snapCtx.drawImage(fullCanvas, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h);
@@ -904,7 +903,7 @@
 
   function createDraggablePhotoWidget(dataUrl, width, height) {
     const div = document.createElement('div');
-    div.className = 'glass-panel hud-interactive';
+    div.className = 'polaroid-photo hud-interactive';
     div.style.position = 'absolute';
     
     // Spawn at slightly randomized locations so they don't overlap completely
@@ -913,63 +912,71 @@
     div.style.left = (canvasElement.width / 2 - width / 2 + randomOffsetX) + 'px';
     div.style.top = (canvasElement.height / 2 - height / 2 + randomOffsetY) + 'px';
     
+    // Polaroid Style
     div.style.width = width + 'px';
     div.style.height = height + 'px';
-    div.style.minWidth = '100px';
-    div.style.minHeight = '100px';
+    div.style.minWidth = '120px';
+    div.style.minHeight = '140px';
     div.style.resize = 'both';
     div.style.overflow = 'hidden';
     div.style.zIndex = '200';
-    div.style.padding = '4px';
-    div.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+    div.style.background = '#f4f4f4'; // Off-white polaroid paper
+    div.style.padding = '8px 8px 36px 8px'; // Thick bottom margin
+    div.style.boxShadow = '2px 6px 15px rgba(0,0,0,0.6)';
+    div.style.border = '1px solid #ddd';
     div.style.display = 'flex';
     div.style.flexDirection = 'column';
+    div.style.cursor = 'grab';
     
-    const header = document.createElement('div');
-    header.style.display = 'flex';
-    header.style.justifyContent = 'space-between';
-    header.style.alignItems = 'center';
-    header.style.background = 'rgba(0,0,0,0.5)';
-    header.style.padding = '2px 6px';
-    header.style.cursor = 'grab';
-    
-    const title = document.createElement('span');
-    title.textContent = '📸 Captura';
-    title.style.fontSize = '0.7rem';
-    title.style.color = '#fff';
+    // Random rotation for natural dropped look
+    const rot = (Math.random() - 0.5) * 16;
+    div.style.transform = `rotate(${rot}deg)`;
     
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '✖';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.bottom = '8px';
+    closeBtn.style.right = '8px';
     closeBtn.style.background = 'none';
     closeBtn.style.border = 'none';
-    closeBtn.style.color = '#ff5555';
+    closeBtn.style.color = '#d32f2f';
     closeBtn.style.cursor = 'pointer';
     closeBtn.style.padding = '4px';
+    closeBtn.style.fontSize = '12px';
+    closeBtn.style.fontWeight = 'bold';
     closeBtn.onclick = () => div.remove();
-    
-    header.appendChild(title);
-    header.appendChild(closeBtn);
     
     const img = document.createElement('img');
     img.src = dataUrl;
     img.style.width = '100%';
-    img.style.height = 'calc(100% - 24px)';
+    img.style.height = '100%'; // takes all space except padding
     img.style.objectFit = 'cover';
     img.style.pointerEvents = 'none';
+    img.style.border = '1px solid #222';
+    img.style.backgroundColor = '#111';
     
-    div.appendChild(header);
     div.appendChild(img);
+    div.appendChild(closeBtn);
     document.getElementById('app-container').appendChild(div);
     
-    // Make draggable
+    // Make draggable (the whole polaroid)
     let isDragging = false;
     let offsetX, offsetY;
     
     const startDrag = (clientX, clientY) => {
+      // Avoid dragging if they clicked near the bottom right (resizing handle)
+      const rect = div.getBoundingClientRect();
+      if (clientX > rect.right - 20 && clientY > rect.bottom - 20) return;
+      
       isDragging = true;
       offsetX = clientX - div.offsetLeft;
       offsetY = clientY - div.offsetTop;
-      header.style.cursor = 'grabbing';
+      div.style.cursor = 'grabbing';
+      
+      // Bring to front
+      const allPhotos = document.querySelectorAll('.polaroid-photo');
+      allPhotos.forEach(p => p.style.zIndex = '200');
+      div.style.zIndex = '201';
     };
     
     const doDrag = (clientX, clientY) => {
@@ -980,14 +987,14 @@
     
     const endDrag = () => {
       isDragging = false;
-      header.style.cursor = 'grab';
+      div.style.cursor = 'grab';
     };
     
-    header.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+    div.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
     document.addEventListener('mousemove', (e) => doDrag(e.clientX, e.clientY));
     document.addEventListener('mouseup', endDrag);
     
-    header.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
+    div.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
     document.addEventListener('touchmove', (e) => doDrag(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
     document.addEventListener('touchend', endDrag);
   }
