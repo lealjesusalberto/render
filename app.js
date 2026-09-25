@@ -560,10 +560,12 @@
     const airCanvasHint = document.getElementById('aircanvas-hint');
     const airCanvasControls = document.getElementById('aircanvas-controls');
     const wireframe3dControls = document.getElementById('wireframe3d-controls');
+    const mobileWireframe3dControls = document.getElementById('mobile-wireframe3d-controls');
 
     if (airCanvasHint) airCanvasHint.style.display = (mode === 'aircanvas') ? 'block' : 'none';
     if (airCanvasControls) airCanvasControls.style.display = (mode === 'aircanvas') ? 'flex' : 'none';
     if (wireframe3dControls) wireframe3dControls.style.display = (mode === 'wireframe3d') ? 'flex' : 'none';
+    if (mobileWireframe3dControls) mobileWireframe3dControls.style.display = (mode === 'wireframe3d') ? 'flex' : 'none';
   }
 
   // UI Event Listeners

@@ -618,3 +618,9 @@ body, html {
     padding: 12px 10px 8px 10px !important;
   }
 }
+
+@media (min-width: 769px) {
+  #mobile-wireframe3d-controls {
+    display: none !important;
+  }
+}

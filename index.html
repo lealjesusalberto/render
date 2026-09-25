@@ -249,6 +249,17 @@
         ✍️ MODO ESCRITURA ACTIVO: Mueve la punta de tu dedo índice ☝️ para escribir en la pantalla
       </div>
 
+      <!-- Mobile 3D Object Controls -->
+      <div id="mobile-wireframe3d-controls" class="glass-panel" style="display: none; position: absolute; top: 60px; right: 10px; padding: 8px; z-index: 50; border-radius: 12px; flex-direction: column; gap: 6px; background: rgba(13, 17, 27, 0.85);">
+         <div style="font-size: 0.65rem; text-align: center; color: var(--primary); font-family: var(--font-hud);">MODELO 3D</div>
+         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button class="action-btn model-btn active" data-model="cube" style="padding: 6px 8px; font-size: 0.7rem; justify-content: center;">🧊</button>
+            <button class="action-btn model-btn" data-model="sphere" style="padding: 6px 8px; font-size: 0.7rem; justify-content: center;">🌐</button>
+            <button class="action-btn model-btn" data-model="torus" style="padding: 6px 8px; font-size: 0.7rem; justify-content: center;">🍩</button>
+            <button class="action-btn model-btn" data-model="pyramid" style="padding: 6px 8px; font-size: 0.7rem; justify-content: center;">💎</button>
+         </div>
+      </div>
+
       <!-- Gestures Tutorial Guide (Bottom Left) -->
       <div class="gesture-guide-card glass-panel hud-interactive">
         <div class="guide-title">
