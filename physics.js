@@ -530,16 +530,14 @@ class TaskManager {
     
     // DOM Elements
     this.listEl = document.getElementById('task-list');
-    this.voiceBtn = document.getElementById('voice-dictate-btn');
+    this.voiceIndicator = document.getElementById('voice-indicator');
     
     // Web Speech API
-    this.isListening = false;
+    this.isDashboardActive = false;
+    this.dictationState = 'IDLE'; // 'IDLE' or 'DICTATING'
+    this.dictationBuffer = "";
     this.recognition = null;
     this.setupSpeechRecognition();
-
-    if (this.voiceBtn) {
-       this.voiceBtn.addEventListener('click', () => this.toggleListening());
-    }
 
     this.renderDOM();
     this.makeDraggable();
@@ -554,7 +552,6 @@ class TaskManager {
     let startX, startY, initialLeft, initialTop;
 
     const onStart = (e) => {
-      if (e.target.id === 'voice-dictate-btn') return; // no arrastrar si clic en botón
       isDragging = true;
       header.style.cursor = 'grabbing';
       
@@ -602,61 +599,109 @@ class TaskManager {
     if (SpeechRecognition) {
       this.recognition = new SpeechRecognition();
       this.recognition.lang = 'es-ES';
-      this.recognition.continuous = false;
+      this.recognition.continuous = true; // Escucha continua
       this.recognition.interimResults = false;
 
       this.recognition.onstart = () => {
-        this.isListening = true;
         this.updateVoiceBtn();
       };
 
       this.recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        if (transcript) {
-           this.tasks.push({ text: "🗣️ " + transcript, done: false });
-           if (window.cyberAudio) window.cyberAudio.playPluck(500, 1);
-           this.renderDOM();
+        const current = event.resultIndex;
+        const originalTranscript = event.results[current][0].transcript.trim();
+        const transcriptLower = originalTranscript.toLowerCase();
+
+        if (this.dictationState === 'IDLE') {
+           if (transcriptLower.includes("dictar tarea")) {
+              this.dictationState = 'DICTATING';
+              this.dictationBuffer = "";
+              if (window.cyberAudio) window.cyberAudio.playPinch(true);
+              
+              // Extraer texto después de "dictar tarea" por si habló rápido
+              const afterDictarIndex = transcriptLower.indexOf("dictar tarea") + "dictar tarea".length;
+              let afterDictar = originalTranscript.substring(afterDictarIndex).trim();
+              
+              if (afterDictar) {
+                 if (afterDictar.toLowerCase().includes("guardar tarea")) {
+                    const saveIndex = afterDictar.toLowerCase().indexOf("guardar tarea");
+                    const taskText = afterDictar.substring(0, saveIndex).trim();
+                    if (taskText) {
+                       this.tasks.push({ text: "🗣️ " + taskText, done: false });
+                       if (window.cyberAudio) window.cyberAudio.playClear();
+                       this.renderDOM();
+                    }
+                    this.dictationState = 'IDLE';
+                 } else {
+                    this.dictationBuffer = afterDictar;
+                 }
+              }
+              this.updateVoiceBtn();
+           }
+        } else if (this.dictationState === 'DICTATING') {
+           if (transcriptLower.includes("guardar tarea")) {
+              const saveIndex = transcriptLower.indexOf("guardar tarea");
+              const beforeGuardar = originalTranscript.substring(0, saveIndex).trim();
+              
+              if (beforeGuardar) {
+                 this.dictationBuffer += (this.dictationBuffer ? " " : "") + beforeGuardar;
+              }
+
+              if (this.dictationBuffer) {
+                 this.tasks.push({ text: "🗣️ " + this.dictationBuffer, done: false });
+                 if (window.cyberAudio) window.cyberAudio.playClear();
+                 this.renderDOM();
+              }
+              
+              this.dictationState = 'IDLE';
+              this.dictationBuffer = "";
+              this.updateVoiceBtn();
+           } else {
+              this.dictationBuffer += (this.dictationBuffer ? " " : "") + originalTranscript;
+              this.updateVoiceBtn();
+           }
         }
       };
 
       this.recognition.onerror = (event) => {
         console.warn("Error de reconocimiento de voz:", event.error);
-        this.isListening = false;
-        this.updateVoiceBtn();
+        // Si hay error pero seguimos en dashboard, reiniciar no pasa nada, se maneja en onend
       };
 
       this.recognition.onend = () => {
-        this.isListening = false;
-        this.updateVoiceBtn();
+        // Reiniciar automáticamente si el dashboard sigue activo (para escucha perpetua)
+        if (this.isDashboardActive) {
+            try { this.recognition.start(); } catch(e){}
+        }
       };
     } else {
       console.warn("Web Speech API no soportada en este navegador.");
-      if (this.voiceBtn) this.voiceBtn.style.display = 'none';
+      if (this.voiceIndicator) this.voiceIndicator.style.display = 'none';
+    }
+  }
+
+  setActive(isActive) {
+    this.isDashboardActive = isActive;
+    if (this.recognition) {
+      if (isActive) {
+        try { this.recognition.start(); } catch(e){}
+      } else {
+        this.recognition.stop();
+        this.dictationState = 'IDLE';
+        this.updateVoiceBtn();
+      }
     }
   }
 
   updateVoiceBtn() {
-    if (!this.voiceBtn) return;
-    if (this.isListening) {
-       this.voiceBtn.innerHTML = '🎙️ Escuchando...';
-       this.voiceBtn.style.background = 'rgba(255,0,127,0.5)';
-       this.voiceBtn.style.color = '#fff';
+    if (!this.voiceIndicator) return;
+    if (this.dictationState === 'DICTATING') {
+       this.voiceIndicator.innerHTML = '🎙️ Escuchando tarea...';
+       this.voiceIndicator.style.background = 'rgba(255,0,127,0.8)';
+       this.voiceIndicator.style.color = '#fff';
     } else {
-       this.voiceBtn.innerHTML = '🎤 Dictar';
-       this.voiceBtn.style.background = 'rgba(255,0,127,0.2)';
-    }
-  }
-
-  toggleListening() {
-    if (!this.recognition) return;
-    if (this.isListening) {
-      this.recognition.stop();
-    } else {
-      try {
-        this.recognition.start();
-      } catch (e) {
-        console.error("Error al iniciar reconocimiento:", e);
-      }
+       this.voiceIndicator.innerHTML = '🎤 Di "Dictar Tarea"';
+       this.voiceIndicator.style.background = 'rgba(0,0,0,0.5)';
+       this.voiceIndicator.style.color = 'var(--primary)';
     }
   }
 

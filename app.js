@@ -611,7 +611,11 @@
     if (airCanvasControls) airCanvasControls.style.display = (mode === 'aircanvas') ? 'flex' : 'none';
     if (wireframe3dControls) wireframe3dControls.style.display = (mode === 'wireframe3d') ? 'flex' : 'none';
     if (mobileWireframe3dControls) mobileWireframe3dControls.style.display = (mode === 'wireframe3d') ? 'flex' : 'none';
-    if (devDashboard) devDashboard.style.display = (mode === 'dashboard') ? 'flex' : 'none';
+    if (devDashboard) {
+      const isActive = (mode === 'dashboard');
+      devDashboard.style.display = isActive ? 'flex' : 'none';
+      if (window.taskManager) window.taskManager.setActive(isActive);
+    }
   }
 
   // UI Event Listeners
