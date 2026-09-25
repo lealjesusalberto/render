@@ -503,9 +503,92 @@ body, html {
   100% { filter: drop-shadow(0 0 14px var(--accent)); }
 }
 
-/* Responsive tweaks */
+/* Responsive tweaks for Mobile */
 @media (max-width: 768px) {
-  .hud-sidebar { display: none; }
-  .gesture-guide-card { display: none; }
-  .hud-modes-dock { transform: scale(0.9); }
+  /* Hide all top elements except the FPS indicator */
+  .brand-badge {
+    display: none !important;
+  }
+
+  .header-actions {
+    display: none !important;
+  }
+
+  .status-item.desktop-only {
+    display: none !important;
+  }
+
+  .hud-header {
+    justify-content: flex-end;
+    padding: 0;
+  }
+
+  .status-widget {
+    padding: 5px 12px;
+    background: rgba(13, 17, 27, 0.75);
+    border-radius: 16px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .status-value {
+    font-size: 0.8rem;
+  }
+
+  /* Hide desktop drawers and guides */
+  .hud-sidebar {
+    display: none !important;
+  }
+
+  .gesture-guide-card {
+    display: none !important;
+  }
+
+  /* Compact hint banner on mobile */
+  #aircanvas-hint {
+    top: 50px !important;
+    font-size: 0.75rem !important;
+    padding: 6px 14px !important;
+    max-width: 90% !important;
+    border-radius: 16px !important;
+  }
+
+  /* Make bottom menu smaller and compact */
+  .hud-modes-dock {
+    width: auto;
+    max-width: calc(100vw - 20px);
+    padding: 4px 6px;
+    gap: 4px;
+    border-radius: 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    transform: none;
+    margin-bottom: 4px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  }
+
+  .hud-modes-dock::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mode-tab {
+    padding: 6px 10px;
+    font-size: 0.72rem;
+    gap: 4px;
+    border-radius: 16px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .mode-tab .mode-icon {
+    font-size: 0.85rem;
+  }
+
+  .hud-layer {
+    padding: 12px 10px 8px 10px;
+  }
 }
