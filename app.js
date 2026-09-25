@@ -469,20 +469,43 @@
           window.particleSystem.emit(h1.screenTips.index.x, h1.screenTips.index.y, 1, activeColor, 1);
           window.particleSystem.emit(h2.screenTips.thumb.x, h2.screenTips.thumb.y, 1, activeColor, 1);
         }
+        // Wait for 3 seconds logic (60fps * 3 = 180 frames)
+        frameCaptureProgress += (100 / 180);
         
-        const now = Date.now();
-        if (now - lastCaptureTime > 2000) { // 2 second cooldown
-          // Tomar la foto primero ANTES de dibujar el flash blanco
-          capturePhotoFromRect(frameRect);
-          lastCaptureTime = now;
-          if (window.cyberAudio) window.cyberAudio.playClear();
-
-          // Dibujar el Flash effect después de tomar la foto
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-          ctx.fillRect(frameRect.x, frameRect.y, frameRect.w, frameRect.h);
-        }
+        const cx = frameRect.x + frameRect.w / 2;
+        const cy = frameRect.y + frameRect.h / 2;
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, 30, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * (frameCaptureProgress / 100)));
+        ctx.strokeStyle = activeColor;
+        ctx.stroke();
+        
+        const secondsLeft = Math.ceil(3 - (frameCaptureProgress / 100) * 3);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 20px var(--font-hud)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(secondsLeft > 0 ? secondsLeft : '📸', cx, cy);
         
         ctx.restore();
+        
+        if (frameCaptureProgress >= 100) {
+          capturePhotoFromRect(frameRect);
+          frameCaptureProgress = 0; // reset
+          if (window.cyberAudio) window.cyberAudio.playClear();
+          
+          // Flash effect
+          ctx.save();
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.fillRect(frameRect.x, frameRect.y, frameRect.w, frameRect.h);
+          ctx.restore();
+        }
       }
     }
   }
@@ -975,11 +998,25 @@
     div.className = 'polaroid-photo hud-interactive';
     div.style.position = 'absolute';
     
-    // Spawn at slightly randomized locations so they don't overlap completely
-    const randomOffsetX = (Math.random() - 0.5) * 150;
-    const randomOffsetY = (Math.random() - 0.5) * 150;
-    div.style.left = (canvasElement.width / 2 - width / 2 + randomOffsetX) + 'px';
-    div.style.top = (canvasElement.height / 2 - height / 2 + randomOffsetY) + 'px';
+    // Spawn at sides
+    const side = Math.random() > 0.5 ? 'left' : 'right';
+    let spawnX;
+    
+    // Max width we want to consider so it doesn't spawn off-screen
+    const safeW = Math.max(width, 120); 
+    
+    if (side === 'left') {
+      spawnX = 20 + Math.random() * 80;
+    } else {
+      spawnX = canvasElement.width - safeW - 20 - (Math.random() * 80);
+    }
+    
+    // Random height somewhere in the middle 60% of the screen
+    const safeH = Math.max(height, 140);
+    const spawnY = (canvasElement.height * 0.2) + Math.random() * (canvasElement.height * 0.6 - safeH);
+    
+    div.style.left = spawnX + 'px';
+    div.style.top = spawnY + 'px';
     
     // Polaroid Style
     div.style.width = width + 'px';
