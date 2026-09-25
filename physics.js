@@ -56,10 +56,10 @@ class VerletStick {
 class ParticleSystem {
   constructor() {
     this.particles = [];
-    this.maxParticles = 300;
+    this.maxParticles = 120;
   }
 
-  emit(x, y, count = 5, color = '#00f3ff', speed = 3) {
+  emit(x, y, count = 3, color = '#00f3ff', speed = 3) {
     for (let i = 0; i < count; i++) {
       if (this.particles.length >= this.maxParticles) {
         this.particles.shift();
@@ -72,8 +72,8 @@ class ParticleSystem {
         vx: Math.cos(angle) * v,
         vy: Math.sin(angle) * v,
         life: 1.0,
-        decay: Math.random() * 0.03 + 0.02,
-        size: Math.random() * 3 + 1.5,
+        decay: Math.random() * 0.04 + 0.03,
+        size: Math.random() * 2.5 + 1.2,
         color
       });
     }
@@ -85,8 +85,8 @@ class ParticleSystem {
       const p = this.particles[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vx *= 0.96;
-      p.vy *= 0.96;
+      p.vx *= 0.94;
+      p.vy *= 0.94;
       p.life -= p.decay;
 
       if (p.life <= 0) {
@@ -97,9 +97,7 @@ class ParticleSystem {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
       ctx.fillStyle = p.color;
-      ctx.globalAlpha = p.life * 0.9;
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = p.color;
+      ctx.globalAlpha = p.life * 0.85;
       ctx.fill();
     }
     ctx.restore();
@@ -478,6 +476,7 @@ class AirCanvasManager {
   }
 
   draw(ctx) {
+    if (this.strokes.length === 0) return;
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -496,17 +495,16 @@ class AirCanvasManager {
       }
       ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
 
-      // Neon outer glow
-      ctx.lineWidth = stroke.width + 4;
+      // Fast Neon Outer Glow (Ultra-fast GPU stroke without shadowBlur lag)
+      ctx.lineWidth = stroke.width + 6;
       ctx.strokeStyle = stroke.color;
-      ctx.shadowColor = stroke.color;
-      ctx.shadowBlur = 18;
+      ctx.globalAlpha = 0.35;
       ctx.stroke();
 
-      // Crisp inner core
+      // Sharp Crisp Inner Core
       ctx.lineWidth = stroke.width;
       ctx.strokeStyle = '#ffffff';
-      ctx.shadowBlur = 4;
+      ctx.globalAlpha = 0.95;
       ctx.stroke();
     }
     ctx.restore();
