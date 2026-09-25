@@ -304,6 +304,55 @@
   // Mode 4: Laser Beams & Cosmic Singularity
   function renderBeamsMode() {
     ctx.save();
+    
+    // Connect fingers between two hands!
+    if (handsData.length >= 2) {
+      const h1 = handsData[0];
+      const h2 = handsData[1];
+      const fingers = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+      
+      for (const finger of fingers) {
+        const p1 = h1.screenTips[finger];
+        const p2 = h2.screenTips[finger];
+        
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        
+        // Add a jagged lightning/energy effect by drawing a segmented line
+        const segs = 6;
+        for (let i = 1; i <= segs; i++) {
+          const t = i / segs;
+          const cx = p1.x + (p2.x - p1.x) * t;
+          const cy = p1.y + (p2.y - p1.y) * t;
+          const jitterX = (Math.random() - 0.5) * 15 * (1 - Math.abs(t - 0.5) * 2);
+          const jitterY = (Math.random() - 0.5) * 15 * (1 - Math.abs(t - 0.5) * 2);
+          
+          if (i === segs) {
+            ctx.lineTo(p2.x, p2.y);
+          } else {
+            ctx.lineTo(cx + jitterX, cy + jitterY);
+          }
+        }
+        
+        ctx.lineWidth = lineWidth * 0.8;
+        ctx.strokeStyle = activeColor;
+        ctx.shadowColor = activeColor;
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        
+        ctx.lineWidth = lineWidth * 0.4;
+        ctx.strokeStyle = '#ffffff';
+        ctx.shadowBlur = 5;
+        ctx.stroke();
+        
+        if (Math.random() < 0.2) {
+          const midX = (p1.x + p2.x) / 2;
+          const midY = (p1.y + p2.y) / 2;
+          window.particleSystem.emit(midX, midY, 1, activeColor, 1);
+        }
+      }
+    }
+
     for (const hand of handsData) {
       const isFist = hand.analysis.gesture === 'FIST';
       const wrist = hand.screenWrist;
@@ -323,7 +372,7 @@
 
         // Accretion swirl particles
         window.particleSystem.emit(wrist.x, wrist.y, 4, activeColor, 4);
-      } else {
+      } else if (handsData.length < 2) {
         // Laser rays projecting from all 5 fingertips
         for (const key in hand.screenTips) {
           const tip = hand.screenTips[key];
