@@ -725,6 +725,16 @@
       devDashboard.style.display = isActive ? 'flex' : 'none';
       if (window.taskManager) window.taskManager.setActive(isActive);
     }
+    
+    // Solo mostrar las fotos tomadas en el modo cámara
+    const photos = document.querySelectorAll('.polaroid-photo');
+    photos.forEach(photo => {
+      if (mode === 'camera') {
+        photo.style.display = 'flex';
+      } else {
+        photo.style.display = 'none';
+      }
+    });
   }
 
   function changeMode(modeId) {
