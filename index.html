@@ -272,9 +272,10 @@
       </div>
 
       <!-- Gestures Tutorial Guide (Bottom Left) -->
-      <div class="gesture-guide-card glass-panel hud-interactive">
-        <div class="guide-title">
+      <div id="gesture-guide" class="gesture-guide-card glass-panel hud-interactive">
+        <div class="guide-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
           <span>GUÍA DE INTERACCIÓN</span>
+          <button id="close-guide-btn" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; padding: 0 4px;">×</button>
         </div>
         <div class="guide-list">
           <div class="guide-row">

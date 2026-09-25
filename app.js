@@ -639,6 +639,13 @@
     });
   });
 
+  const closeGuideBtn = document.getElementById('close-guide-btn');
+  if (closeGuideBtn) {
+    closeGuideBtn.addEventListener('click', () => {
+      document.getElementById('gesture-guide').style.display = 'none';
+    });
+  }
+
   lineWidthSlider.addEventListener('input', (e) => {
     lineWidth = parseFloat(e.target.value);
     document.getElementById('line-width-val').textContent = `${lineWidth}px`;

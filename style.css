@@ -305,11 +305,11 @@ body, html {
   position: absolute;
   top: 90px;
   right: 24px;
-  width: 240px;
-  padding: 14px;
+  width: 200px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   transform: translateX(0);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
 }
@@ -322,7 +322,7 @@ body, html {
 
 .sidebar-title {
   font-family: var(--font-hud);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   letter-spacing: 1.5px;
   color: var(--primary);
   display: flex;
@@ -333,11 +333,11 @@ body, html {
 .control-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .control-label {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -374,12 +374,13 @@ body, html {
 /* Color Palette Swatches */
 .color-swatches {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .color-swatch {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
@@ -402,16 +403,15 @@ body, html {
   position: absolute;
   bottom: 24px;
   left: 24px;
-  width: 320px;
-  padding: 16px 20px;
+  width: 260px;
+  padding: 12px 14px;
 }
 
 .guide-title {
   font-family: var(--font-hud);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   letter-spacing: 1.2px;
   color: var(--primary);
-  margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -420,25 +420,25 @@ body, html {
 .guide-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .guide-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 0.82rem;
+  gap: 10px;
+  font-size: 0.75rem;
 }
 
 .guide-badge {
-  font-size: 1.1rem;
+  font-size: 1rem;
   background: rgba(255, 255, 255, 0.06);
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -449,7 +449,7 @@ body, html {
 
 .guide-desc span {
   color: var(--text-muted);
-  font-size: 0.74rem;
+  font-size: 0.7rem;
 }
 
 /* Camera Permission Loading Screen */
