@@ -226,7 +226,10 @@
 
     for (const hand of handsData) {
       const idxTip = hand.screenTips.index;
-      const isWriting = (hand.analysis.gesture === 'POINTING');
+      
+      // Prevent writing if interacting with UI
+      const isOverUI = isMenuOpen || hoverElement !== null;
+      const isWriting = (hand.analysis.gesture === 'POINTING' && !isOverUI);
 
       if (isWriting) {
         if (!airCanvas.currentStroke) {
