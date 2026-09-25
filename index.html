@@ -34,31 +34,47 @@
         font-size: 0.8rem !important;
       }
       .hud-modes-dock {
-        width: auto !important;
-        max-width: calc(100vw - 20px) !important;
-        padding: 4px 6px !important;
-        gap: 4px !important;
-        border-radius: 24px !important;
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        scrollbar-width: none !important;
-        transform: none !important;
-        margin-bottom: 4px !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        position: fixed !important;
+        bottom: 12px !important;
+        bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        z-index: 99999 !important;
+        display: flex !important;
+        width: calc(100vw - 20px) !important;
+        max-width: 440px !important;
+        justify-content: space-around !important;
+        padding: 6px 4px !important;
+        background: rgba(10, 14, 24, 0.95) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(0, 243, 255, 0.4) !important;
+        border-radius: 28px !important;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 243, 255, 0.25) !important;
       }
       .hud-modes-dock::-webkit-scrollbar {
         display: none !important;
       }
       .mode-tab {
-        padding: 6px 10px !important;
-        font-size: 0.72rem !important;
-        gap: 4px !important;
+        padding: 6px 4px !important;
         border-radius: 16px !important;
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
+        flex-direction: column !important;
+        gap: 3px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex: 1 !important;
+        min-width: 0 !important;
       }
       .mode-tab .mode-icon {
-        font-size: 0.85rem !important;
+        font-size: 1.15rem !important;
+      }
+      .mode-tab span:last-child {
+        font-size: 0.62rem !important;
+        letter-spacing: 0px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 58px !important;
       }
       .hud-layer {
         padding: 12px 10px 8px 10px !important;

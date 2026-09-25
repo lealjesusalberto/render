@@ -28,6 +28,7 @@
 body, html {
   width: 100%;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
   background-color: var(--bg-dark);
   font-family: var(--font-body);
@@ -37,7 +38,9 @@ body, html {
 #app-container {
   position: relative;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -247,12 +250,18 @@ body, html {
 
 /* Modes Dock (Bottom Center) */
 .hud-modes-dock {
-  align-self: center;
+  position: fixed;
+  bottom: 24px;
+  bottom: max(24px, env(safe-area-inset-bottom, 24px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
   display: flex;
   gap: 8px;
-  padding: 8px;
+  padding: 8px 12px;
   background: rgba(10, 14, 22, 0.85);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--panel-border);
   border-radius: 40px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
@@ -556,19 +565,25 @@ body, html {
     border-radius: 16px !important;
   }
 
-  /* Make bottom menu smaller and compact */
+  /* Make bottom menu smaller, compact, and fixed at visible bottom */
   .hud-modes-dock {
-    width: auto;
-    max-width: calc(100vw - 20px);
-    padding: 4px 6px;
-    gap: 4px;
-    border-radius: 24px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    transform: none;
-    margin-bottom: 4px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    position: fixed !important;
+    bottom: 12px !important;
+    bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    width: calc(100vw - 20px) !important;
+    max-width: 440px !important;
+    justify-content: space-around !important;
+    padding: 6px 4px !important;
+    background: rgba(10, 14, 24, 0.94) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(0, 243, 255, 0.4) !important;
+    border-radius: 28px !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 243, 255, 0.25) !important;
   }
 
   .hud-modes-dock::-webkit-scrollbar {
@@ -576,19 +591,30 @@ body, html {
   }
 
   .mode-tab {
-    padding: 6px 10px;
-    font-size: 0.72rem;
-    gap: 4px;
-    border-radius: 16px;
-    white-space: nowrap;
-    flex-shrink: 0;
+    padding: 6px 4px !important;
+    border-radius: 16px !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 !important;
+    min-width: 0 !important;
   }
 
   .mode-tab .mode-icon {
-    font-size: 0.85rem;
+    font-size: 1.15rem !important;
+  }
+
+  .mode-tab span:last-child {
+    font-size: 0.62rem !important;
+    letter-spacing: 0px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 58px !important;
   }
 
   .hud-layer {
-    padding: 12px 10px 8px 10px;
+    padding: 12px 10px 8px 10px !important;
   }
 }
