@@ -9,6 +9,11 @@ class WireframeObject3D {
     this.position = { x: canvasWidth / 2, y: canvasHeight / 2, z: 0 };
     this.rotation = { x: 0.35, y: 0.55, z: 0 };
     this.scale = { x: 180, y: 180, z: 180 };
+    
+    // Physics (Inertia)
+    this.rotVelocity = { x: 0, y: 0, z: 0 };
+    this.posVelocity = { x: 0, y: 0 };
+    this.scaleVelocity = 0;
 
     // Rendering Style: 'solid-wireframe' (Holograma/Cristal) | 'solid' (Sólido Opaco) | 'wireframe' (Solo Líneas)
     this.renderStyle = 'solid-wireframe';
@@ -231,6 +236,9 @@ class WireframeObject3D {
     this.scale = { x: 180, y: 180, z: 180 };
     this.rotation = { x: 0.35, y: 0.55, z: 0 };
     this.position = { x: this.width / 2, y: this.height / 2, z: 0 };
+    this.rotVelocity = { x: 0, y: 0, z: 0 };
+    this.posVelocity = { x: 0, y: 0 };
+    this.scaleVelocity = 0;
     if (window.cyberAudio) window.cyberAudio.playClear();
   }
 
@@ -298,9 +306,29 @@ class WireframeObject3D {
   }
 
   interact(handsData) {
-    if (!this.isInteracting) {
-      this.rotation.y += 0.005;
-      this.rotation.x += 0.002;
+    // Apply Physics & Damping (Inertia)
+    this.rotation.x += this.rotVelocity.x;
+    this.rotation.y += this.rotVelocity.y;
+    this.rotation.z += this.rotVelocity.z;
+    
+    this.position.x += this.posVelocity.x;
+    this.position.y += this.posVelocity.y;
+    
+    this.scale.x = Math.max(60, Math.min(this.scale.x + this.scaleVelocity, 450));
+    this.scale.y = Math.max(60, Math.min(this.scale.y + this.scaleVelocity, 450));
+    this.scale.z = Math.max(60, Math.min(this.scale.z + this.scaleVelocity, 450));
+
+    this.rotVelocity.x *= 0.92;
+    this.rotVelocity.y *= 0.92;
+    this.rotVelocity.z *= 0.92;
+    this.posVelocity.x *= 0.85;
+    this.posVelocity.y *= 0.85;
+    this.scaleVelocity *= 0.85;
+
+    // Idle rotation if completely still
+    if (!this.isInteracting && Math.abs(this.rotVelocity.x) < 0.001 && Math.abs(this.rotVelocity.y) < 0.001) {
+      this.rotation.y += 0.003;
+      this.rotation.x += 0.0015;
     }
 
     if (!handsData || handsData.length === 0) {
@@ -385,6 +413,11 @@ class WireframeObject3D {
       } else if (this.isDraggingObject && this.lastPinchPos) {
         const dx = pinchPt.x - this.lastPinchPos.x;
         const dy = pinchPt.y - this.lastPinchPos.y;
+        
+        // Add momentum
+        this.posVelocity.x = dx * 0.4;
+        this.posVelocity.y = dy * 0.4;
+        
         this.position.x += dx;
         this.position.y += dy;
         this.lastPinchPos = pinchPt;
@@ -416,14 +449,14 @@ class WireframeObject3D {
         }
       }
 
-      // Rotate with open palm
+      // Rotate with open palm (adds rotational velocity)
       if (hand.analysis.gesture === 'OPEN_HAND') {
         const palmCenter = hand.screenTips.middle;
         if (this.prevPalmX !== undefined) {
           const deltaX = palmCenter.x - this.prevPalmX;
           const deltaY = palmCenter.y - this.prevPalmY;
-          this.rotation.y += deltaX * 0.007;
-          this.rotation.x -= deltaY * 0.007;
+          this.rotVelocity.y = deltaX * 0.003;
+          this.rotVelocity.x = -deltaY * 0.003;
         }
         this.prevPalmX = palmCenter.x;
         this.prevPalmY = palmCenter.y;
@@ -444,21 +477,19 @@ class WireframeObject3D {
     const midY = (h1.y + h2.y) / 2;
 
     if (this.lastTwoHandDist !== null) {
-      const distRatio = currentDist / this.lastTwoHandDist;
-      if (distRatio > 0.5 && distRatio < 2.0) {
-        const newScaleX = Math.min(Math.max(this.scale.x * distRatio, 60), 450);
-        const newScaleY = Math.min(Math.max(this.scale.y * distRatio, 60), 450);
-        const newScaleZ = Math.min(Math.max(this.scale.z * distRatio, 60), 450);
-        this.scale.x = newScaleX;
-        this.scale.y = newScaleY;
-        this.scale.z = newScaleZ;
-      }
+      const distDelta = currentDist - this.lastTwoHandDist;
+      this.scaleVelocity = distDelta * 0.8;
 
       const angleDelta = currentAngle - this.lastTwoHandAngle;
-      this.rotation.z += angleDelta;
+      this.rotVelocity.z = angleDelta * 0.3;
 
-      this.position.x += (midX - this.lastTwoHandMidX) * 0.8;
-      this.position.y += (midY - this.lastTwoHandMidY) * 0.8;
+      const dx = midX - this.lastTwoHandMidX;
+      const dy = midY - this.lastTwoHandMidY;
+      this.posVelocity.x = dx * 0.3;
+      this.posVelocity.y = dy * 0.3;
+      
+      this.position.x += dx * 0.8;
+      this.position.y += dy * 0.8;
 
       if (window.particleSystem && Math.random() < 0.25) {
         window.particleSystem.emit(midX, midY, 2, '#00f3ff', 2);
