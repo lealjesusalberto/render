@@ -664,3 +664,52 @@ body, html {
   border-color: #00ff66;
   color: #000;
 }
+
+/* Dev Dashboard Panel Styles */
+.dev-dashboard-panel {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  width: 280px;
+  padding: 12px;
+  border-radius: 12px;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(13, 17, 27, 0.85);
+  z-index: 40;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+@media (max-width: 768px) {
+  .dev-dashboard-panel {
+    top: 50px !important;
+    left: 10px !important;
+    width: 200px !important; /* Mucho más pequeño en móvil */
+    padding: 8px !important;
+    gap: 6px !important;
+  }
+  
+  #dev-dashboard-header h2 {
+    font-size: 0.75rem !important;
+  }
+  
+  #voice-dictate-btn {
+    padding: 3px 6px !important;
+    font-size: 0.6rem !important;
+  }
+  
+  .task-item {
+    padding: 4px 6px !important;
+    gap: 6px !important;
+  }
+  
+  #task-list span {
+    font-size: 0.65rem !important; /* Texto muy pequeño */
+  }
+  
+  .task-checkbox {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 2px !important;
+  }
+}
