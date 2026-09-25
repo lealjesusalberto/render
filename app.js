@@ -38,6 +38,7 @@
   let fps = 0;
   let handsData = [];
   let isVideoReady = false;
+  let frameCaptureProgress = 0;
 
   // Hand Connections for Skeleton drawing
   const HAND_CONNECTIONS = [
@@ -446,6 +447,74 @@
     // Draw energy particle system
     window.particleSystem.updateAndDraw(ctx);
 
+    // Director Frame Capture Logic
+    let isFraming = false;
+    
+    if (handsData.length === 2) {
+      const h1 = handsData[0];
+      const h2 = handsData[1];
+      
+      if (h1.analysis.gesture === 'FRAME' && h2.analysis.gesture === 'FRAME') {
+        isFraming = true;
+        
+        const pts = [
+          h1.screenTips.thumb, h1.screenTips.index,
+          h2.screenTips.thumb, h2.screenTips.index
+        ];
+        
+        const minX = Math.min(...pts.map(p => p.x));
+        const maxX = Math.max(...pts.map(p => p.x));
+        const minY = Math.min(...pts.map(p => p.y));
+        const maxY = Math.max(...pts.map(p => p.y));
+        
+        const frameRect = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+        
+        // Draw the framing box
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(frameRect.x, frameRect.y, frameRect.w, frameRect.h);
+        ctx.strokeStyle = activeColor;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Draw progress circle
+        frameCaptureProgress += 2.5; 
+        const cx = frameRect.x + frameRect.w / 2;
+        const cy = frameRect.y + frameRect.h / 2;
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, 24, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * (frameCaptureProgress / 100)));
+        ctx.strokeStyle = '#ff007f';
+        ctx.stroke();
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px var(--font-hud)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('📸', cx, cy);
+        
+        ctx.restore();
+        
+        if (frameCaptureProgress >= 100) {
+           capturePhotoFromRect(frameRect);
+           frameCaptureProgress = 0; 
+           if (window.cyberAudio) window.cyberAudio.playClear();
+        }
+      }
+    }
+    
+    if (!isFraming) {
+      frameCaptureProgress = 0;
+    }
+
     // Calculate FPS
     frameCount++;
     const now = performance.now();
@@ -797,6 +866,120 @@
 
     if (window.cyberAudio) window.cyberAudio.playPinch(true);
   });
+
+  // Photo Capture Logic
+  function capturePhotoFromRect(rect) {
+    if (rect.w < 50 || rect.h < 50) return;
+    const snap = document.createElement('canvas');
+    snap.width = rect.w;
+    snap.height = rect.h;
+    const snapCtx = snap.getContext('2d');
+    
+    const fullCanvas = document.createElement('canvas');
+    fullCanvas.width = canvasElement.width;
+    fullCanvas.height = canvasElement.height;
+    const fullCtx = fullCanvas.getContext('2d');
+    
+    // Draw mirrored video
+    fullCtx.save();
+    fullCtx.scale(-1, 1);
+    fullCtx.drawImage(videoElement, -fullCanvas.width, 0, fullCanvas.width, fullCanvas.height);
+    fullCtx.restore();
+    
+    // Draw UI elements over it
+    fullCtx.drawImage(canvasElement, 0, 0);
+    
+    // Crop
+    snapCtx.drawImage(fullCanvas, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h);
+    
+    const dataUrl = snap.toDataURL('image/png');
+    createDraggablePhotoWidget(dataUrl, rect.w, rect.h);
+  }
+
+  function createDraggablePhotoWidget(dataUrl, width, height) {
+    const div = document.createElement('div');
+    div.className = 'glass-panel hud-interactive';
+    div.style.position = 'absolute';
+    div.style.left = (canvasElement.width / 2 - width / 2) + 'px';
+    div.style.top = (canvasElement.height / 2 - height / 2) + 'px';
+    div.style.width = width + 'px';
+    div.style.height = height + 'px';
+    div.style.minWidth = '100px';
+    div.style.minHeight = '100px';
+    div.style.resize = 'both';
+    div.style.overflow = 'hidden';
+    div.style.zIndex = '200';
+    div.style.padding = '4px';
+    div.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+    div.style.display = 'flex';
+    div.style.flexDirection = 'column';
+    
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.background = 'rgba(0,0,0,0.5)';
+    header.style.padding = '2px 6px';
+    header.style.cursor = 'grab';
+    
+    const title = document.createElement('span');
+    title.textContent = '📸 Captura';
+    title.style.fontSize = '0.7rem';
+    title.style.color = '#fff';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✖';
+    closeBtn.style.background = 'none';
+    closeBtn.style.border = 'none';
+    closeBtn.style.color = '#ff5555';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.padding = '4px';
+    closeBtn.onclick = () => div.remove();
+    
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.style.width = '100%';
+    img.style.height = 'calc(100% - 24px)';
+    img.style.objectFit = 'cover';
+    img.style.pointerEvents = 'none';
+    
+    div.appendChild(header);
+    div.appendChild(img);
+    document.getElementById('app-container').appendChild(div);
+    
+    // Make draggable
+    let isDragging = false;
+    let offsetX, offsetY;
+    
+    const startDrag = (clientX, clientY) => {
+      isDragging = true;
+      offsetX = clientX - div.offsetLeft;
+      offsetY = clientY - div.offsetTop;
+      header.style.cursor = 'grabbing';
+    };
+    
+    const doDrag = (clientX, clientY) => {
+      if (!isDragging) return;
+      div.style.left = (clientX - offsetX) + 'px';
+      div.style.top = (clientY - offsetY) + 'px';
+    };
+    
+    const endDrag = () => {
+      isDragging = false;
+      header.style.cursor = 'grab';
+    };
+    
+    header.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+    document.addEventListener('mousemove', (e) => doDrag(e.clientX, e.clientY));
+    document.addEventListener('mouseup', endDrag);
+    
+    header.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
+    document.addEventListener('touchmove', (e) => doDrag(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
+    document.addEventListener('touchend', endDrag);
+  }
 
   toggleSidebarBtn.addEventListener('click', () => {
     hudSidebar.classList.toggle('collapsed');

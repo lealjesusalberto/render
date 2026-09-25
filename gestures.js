@@ -86,6 +86,10 @@ class GestureRecognizer {
       gesture = 'PEACE';
       gestureName = 'Paz (Control)';
       icon = '✌️';
+    } else if (indexExtended && thumbExtended && !middleExtended && !ringExtended && !pinkyExtended) {
+      gesture = 'FRAME';
+      gestureName = 'Encuadre (Foto)';
+      icon = '📸';
     } else if (!indexExtended && !middleExtended && !ringExtended && !pinkyExtended && !thumbExtended) {
       gesture = 'FIST';
       gestureName = 'Puño (Atracción)';
